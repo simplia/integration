@@ -4,7 +4,7 @@
     "type": "library",
     "require": {
         "php": ">=7.4",
-        "simplia/api": "^0.0.1",
+        "simplia/api": "~0.0.2",
         "pkerrigan/xray": "^1.2",
         "guzzlehttp/guzzle": "^7.2",
         "bref/bref": "^1.2",
