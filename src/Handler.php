@@ -49,7 +49,7 @@ class Handler implements BrefHandler {
             $credentialsContent = $ssm->getParameter([
                 'Name' => $_ENV['CREDENTIALS_PARAMETER_PATH'],
                 'WithDecryption' => true,
-            ])['Parameter']['Value'];
+            ])->getParameter()->getValue();
         } else {
             $credentialsContent = file_get_contents(__DIR__ . '/../../../.credentials.json');
         }
