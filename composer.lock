@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0e98dd6c45c3e1cb836e11d704b856be",
+    "content-hash": "26182a4770a7eb789e23fc909d47ac2d",
     "packages": [
         {
             "name": "async-aws/core",
@@ -1412,7 +1412,7 @@
         },
         {
             "name": "simplia/api",
-            "version": "dev-master",
+            "version": "0.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/simplia/api-php-sdk.git",
@@ -1429,7 +1429,6 @@
                 "guzzlehttp/guzzle": "^7.2",
                 "php": ">=7.4"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -1445,7 +1444,7 @@
             ],
             "support": {
                 "issues": "https://github.com/simplia/api-php-sdk/issues",
-                "source": "https://github.com/simplia/api-php-sdk/tree/master"
+                "source": "https://github.com/simplia/api-php-sdk/tree/0.0.1"
             },
             "time": "2021-03-10T13:39:19+00:00"
         },
@@ -2629,12 +2628,12 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "simplia/api": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
+    "platform": {
+        "php": ">=7.4"
+    },
     "platform-dev": [],
     "plugin-api-version": "2.0.0"
 }

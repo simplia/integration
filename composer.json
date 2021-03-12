@@ -5,7 +5,7 @@
     "require": {
         "php": ">=7.4",
         "aws/aws-sdk-php": "^3.173",
-        "simplia/api": "dev-master",
+        "simplia/api": "^0.0.1",
         "pkerrigan/xray": "^1.2",
         "guzzlehttp/guzzle": "^7.2",
         "bref/bref": "^1.2"
