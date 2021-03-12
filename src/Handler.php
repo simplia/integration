@@ -23,8 +23,8 @@ class Handler implements BrefHandler {
         $this->startTracing($context);
         $http = new Client(['headers' => ['Accept-Encoding' => 'gzip']]);
         $credentials = $this->getCredentialsData();
-        $api = Api::withUsernameAuth($credentials['api']['host'], $credentials['api']['user'], $credentials['api']['password']);
-        unset($credentials['api']);
+        $api = Api::withUsernameAuth($credentials['shop']['host'], $credentials['shop']['user'], $credentials['shop']['password']);
+        unset($credentials['shop']);
 
         $fn = $this->handler;
         $response = $fn(new Context(
