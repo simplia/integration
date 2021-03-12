@@ -2,7 +2,7 @@
 
 namespace Simplia\Integration;
 
-use Aws\Ssm\SsmClient;
+use AsyncAws\Ssm\SsmClient;
 use Bref\Context\Context as BrefContext;
 use \Bref\Event\Handler as BrefHandler;
 use GuzzleHttp\Client;
