@@ -44,7 +44,6 @@ class Handler implements BrefHandler {
     private function getCredentialsData(): array {
         if ($_ENV['CREDENTIALS_PARAMETER_PATH']) {
             $ssm = new SsmClient([
-                'version' => '2014-11-06',
                 'region' => $_ENV['AWS_DEFAULT_REGION'],
             ]);
             $credentialsContent = $ssm->getParameter([
