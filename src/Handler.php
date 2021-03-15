@@ -20,21 +20,19 @@ class Handler implements BrefHandler {
         $this->handler = $handler;
     }
 
-    public function handle($inputData, BrefContext $context) {
+    public function handle($event, BrefContext $context) {
         $this->startTracing($context);
         $http = new Client(['headers' => ['Accept-Encoding' => 'gzip']]);
         $credentials = $this->getCredentialsData();
         $api = Api::withUsernameAuth($credentials['shop']['host'], $credentials['shop']['user'], $credentials['shop']['password']);
         unset($credentials['shop']);
 
-        $event = EventDecoder::fromInput($inputData);
-
         $fn = $this->handler;
         $response = $fn(new Context(
             $http,
             $api,
             $credentials,
-            $event
+            EventDecoder::fromInput($event)
         ));
 
         if (!empty($response)) {
