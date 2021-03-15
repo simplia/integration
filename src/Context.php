@@ -4,14 +4,15 @@ namespace Simplia\Integration;
 
 use GuzzleHttp\ClientInterface;
 use Simplia\Api\Api;
+use Simplia\Integration\Event\IntegrationEvent;
 
 class Context {
     private ClientInterface $client;
     private Api $api;
     private array $parameters;
-    private array $event;
+    private ?IntegrationEvent $event;
 
-    public function __construct(ClientInterface $client, Api $api, array $parameters, array $event) {
+    public function __construct(ClientInterface $client, Api $api, array $parameters, ?IntegrationEvent $event) {
         $this->client = $client;
         $this->api = $api;
         $this->parameters = $parameters;
@@ -30,7 +31,7 @@ class Context {
         return $this->parameters;
     }
 
-    public function getEvent(): array {
+    public function getEvent(): ?IntegrationEvent {
         return $this->event;
     }
 }
