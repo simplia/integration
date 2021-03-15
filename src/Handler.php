@@ -21,7 +21,6 @@ class Handler implements BrefHandler {
     }
 
     public function handle($event, BrefContext $context) {
-        echo json_encode($event) . "\n";
         $this->startTracing($context);
         $http = new Client(['headers' => ['Accept-Encoding' => 'gzip']]);
         $credentials = $this->getCredentialsData();
