@@ -5,11 +5,14 @@ namespace Simplia\Integration;
 use AsyncAws\Ssm\SsmClient;
 use Bref\Context\Context as BrefContext;
 use \Bref\Event\Handler as BrefHandler;
-use GuzzleHttp\Client;
 use Pkerrigan\Xray\Submission\DaemonSegmentSubmitter;
 use Pkerrigan\Xray\Trace;
 use Simplia\Api\Api;
 use Simplia\Integration\Event\EventDecoder;
+use Simplia\Integration\Trace\HttpSegment;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\HttpClient\Psr18Client;
+use Symfony\Component\HttpClient\TraceableHttpClient;
 
 class Handler implements BrefHandler {
 
@@ -22,9 +25,10 @@ class Handler implements BrefHandler {
 
     public function handle($event, BrefContext $context) {
         $this->startTracing($context);
-        $http = new Client(['headers' => ['Accept-Encoding' => 'gzip']]);
+        $http = new TraceableHttpClient(HttpClient::create());
+        $apiHttp = new Psr18Client($http);
         $credentials = $this->getCredentialsData();
-        $api = Api::withUsernameAuth($credentials['shop']['host'], $credentials['shop']['user'], $credentials['shop']['password']);
+        $api = Api::withUsernameAuth($apiHttp, $credentials['shop']['host'], $credentials['shop']['user'], $credentials['shop']['password']);
         unset($credentials['shop']);
 
         $fn = $this->handler;
@@ -39,7 +43,7 @@ class Handler implements BrefHandler {
             echo json_encode($response, JSON_THROW_ON_ERROR);
         }
 
-        $this->endTracing();
+        $this->endTracing($http);
     }
 
     private function getCredentialsData(): array {
@@ -67,13 +71,23 @@ class Handler implements BrefHandler {
             ->begin(100);
     }
 
-    private function endTracing(): void {
+    private function endTracing(TraceableHttpClient $httpClient): void {
         [$host, $port] = explode(':', $_ENV['AWS_XRAY_DAEMON_ADDRESS']);
 
-        Trace::getInstance()
-            ->getCurrentSegment()
+        $instance = Trace::getInstance();
+        foreach ($httpClient->getTracedRequests() as $request) {
+            $segment = new HttpSegment();
+            $segment
+                ->setUrl($request['url'])
+                ->setMethod($request['method'])
+                ->setResponseCode($request['info']['http_code'])
+                ->setStartEnd($request['info']['start_time'], $request['info']['start_time'] + $request['info']['total_time']);
+            $instance->addSubsegment($segment);
+        }
+
+        $instance
             ->end()
-            //->setResponseCode(200)
+            ->setResponseCode(200)
             ->submit(new DaemonSegmentSubmitter($host, (int) $port));
     }
 }

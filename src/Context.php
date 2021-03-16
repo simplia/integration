@@ -2,24 +2,24 @@
 
 namespace Simplia\Integration;
 
-use GuzzleHttp\ClientInterface;
 use Simplia\Api\Api;
 use Simplia\Integration\Event\IntegrationEvent;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class Context {
-    private ClientInterface $client;
+    private HttpClientInterface $client;
     private Api $api;
     private array $parameters;
     private ?IntegrationEvent $event;
 
-    public function __construct(ClientInterface $client, Api $api, array $parameters, ?IntegrationEvent $event) {
+    public function __construct(HttpClientInterface $client, Api $api, array $parameters, ?IntegrationEvent $event) {
         $this->client = $client;
         $this->api = $api;
         $this->parameters = $parameters;
         $this->event = $event;
     }
 
-    public function getClient(): ClientInterface {
+    public function getClient(): HttpClientInterface {
         return $this->client;
     }
 
