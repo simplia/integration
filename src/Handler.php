@@ -71,15 +71,17 @@ class Handler implements BrefHandler {
         [$repository, $shop] = explode('_', $_ENV['AWS_LAMBDA_FUNCTION_NAME']);
         Trace::getInstance()
             ->setTraceHeader($_ENV['_X_AMZN_TRACE_ID'] ?? null)
-            ->setName($repository)
-            ->setUrl($shop)
+            ->setName($_ENV['INTEGRATION_REPOSITORY'] . '--' . $_ENV['INTEGRATION_SHOP'])
+            ->addMetadata('Repository', $_ENV['INTEGRATION_REPOSITORY'])
+            ->addMetadata('Shop', $_ENV['INTEGRATION_SHOP'])
+            ->addMetadata('Version', $_ENV['INTEGRATION_REPOSITORY_VERSION'])
             ->begin(100);
     }
 
     private function endTracing(TraceableHttpClient $httpClient): void {
         [$host, $port] = explode(':', $_ENV['AWS_XRAY_DAEMON_ADDRESS']);
 
-        $instance = Trace::getInstance();
+        $rootSegment = Trace::getInstance()->getCurrentSegment();
         foreach ($httpClient->getTracedRequests() as $request) {
             $segment = new HttpSegment();
             $segment
@@ -87,12 +89,11 @@ class Handler implements BrefHandler {
                 ->setMethod($request['method'])
                 ->setResponseCode($request['info']['http_code'])
                 ->setStartEnd($request['info']['start_time'], $request['info']['start_time'] + $request['info']['total_time']);
-            $instance->addSubsegment($segment);
+            $rootSegment->addSubsegment($segment);
         }
 
-        $instance
-            ->end()
-            ->setResponseCode(200)
+        $rootSegment->end();
+        Trace::getInstance()->setResponseCode(200)
             ->submit(new DaemonSegmentSubmitter($host, (int) $port));
     }
 }
