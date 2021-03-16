@@ -24,7 +24,7 @@ class Handler implements BrefHandler {
     }
 
     public function handle($event, BrefContext $context) {
-        $this->startTracing($context);
+        $this->startTracing();
         $http = new TraceableHttpClient(HttpClient::create());
         $apiHttp = new Psr18Client($http);
         $credentials = $this->getCredentialsData();
@@ -62,10 +62,10 @@ class Handler implements BrefHandler {
         return json_decode($credentialsContent, true, 512, JSON_THROW_ON_ERROR);
     }
 
-    private function startTracing(BrefContext $context): void {
+    private function startTracing(): void {
         [$repository, $shop] = explode('_', $_ENV['AWS_LAMBDA_FUNCTION_NAME']);
         Trace::getInstance()
-            ->setTraceHeader($context->getTraceId())
+            ->setTraceHeader($_ENV['_X_AMZN_TRACE_ID'] ?? null)
             ->setName($repository)
             ->setUrl($shop)
             ->begin(100);
