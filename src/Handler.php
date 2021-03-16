@@ -7,6 +7,7 @@ use Bref\Context\Context as BrefContext;
 use \Bref\Event\Handler as BrefHandler;
 use Pkerrigan\Xray\Submission\DaemonSegmentSubmitter;
 use Pkerrigan\Xray\Trace;
+use RuntimeException;
 use Simplia\Api\Api;
 use Simplia\Integration\Event\EventDecoder;
 use Simplia\Integration\Trace\HttpSegment;
@@ -51,10 +52,14 @@ class Handler implements BrefHandler {
             $ssm = new SsmClient([
                 'region' => $_ENV['AWS_DEFAULT_REGION'],
             ]);
-            $credentialsContent = $ssm->getParameter([
+            $credentialsParameter = $ssm->getParameter([
                 'Name' => $_ENV['CREDENTIALS_PARAMETER_PATH'],
                 'WithDecryption' => true,
-            ])->getParameter()->getValue();
+            ])->getParameter();
+            if (!$credentialsParameter) {
+                throw new RuntimeException('Cannot load credentials');
+            }
+            $credentialsContent = $credentialsParameter->getValue();
         } else {
             $credentialsContent = file_get_contents(__DIR__ . '/../../../.credentials.json');
         }
