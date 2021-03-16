@@ -5,7 +5,6 @@ namespace Simplia\Integration;
 use AsyncAws\Ssm\SsmClient;
 use Bref\Context\Context as BrefContext;
 use \Bref\Event\Handler as BrefHandler;
-use Pkerrigan\Xray\SqlSegment;
 use Pkerrigan\Xray\Submission\DaemonSegmentSubmitter;
 use Pkerrigan\Xray\Trace;
 use RuntimeException;
@@ -104,24 +103,7 @@ class Handler implements BrefHandler {
         }
 
         $this->trace
-            ->getCurrentSegment()
-            ->addSubsegment(
-                (new SqlSegment())
-                    ->setName('db.example.com')
-                    ->setDatabaseType('PostgreSQL')
-                    ->setQuery('query')
-                    ->begin()
-            );
-        sleep(1);
-        $this->trace
-            ->getCurrentSegment()
-            ->end();
-
-
-        $this->trace->end();
-
-        echo json_encode($this->trace) . "\n";
-
-        $this->trace->submit(new DaemonSegmentSubmitter($host, (int) $port));
+            ->end()
+            ->submit(new DaemonSegmentSubmitter($host, (int) $port));
     }
 }
