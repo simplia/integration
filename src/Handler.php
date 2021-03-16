@@ -11,6 +11,7 @@ use Pkerrigan\Xray\Trace;
 use RuntimeException;
 use Simplia\Api\Api;
 use Simplia\Integration\Event\EventDecoder;
+use Simplia\Integration\Trace\HttpSegment;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\HttpClient\Psr18Client;
 use Symfony\Component\HttpClient\TraceableHttpClient;
@@ -88,15 +89,16 @@ class Handler implements BrefHandler {
     private function endTracing(TraceableHttpClient $httpClient): void {
         [$host, $port] = explode(':', $_ENV['AWS_XRAY_DAEMON_ADDRESS']);
 
-        /*foreach ($httpClient->getTracedRequests() as $request) {
+        foreach ($httpClient->getTracedRequests() as $request) {
             $segment = new HttpSegment();
             $segment
                 ->setUrl($request['url'])
                 ->setMethod($request['method'])
+                ->setName(parse_url($request['url'], PHP_URL_HOST))
                 ->setResponseCode($request['info']['http_code'])
                 ->setStartEnd($request['info']['start_time'], $request['info']['start_time'] + $request['info']['total_time']);
             $this->trace->addSubsegment($segment);
-        }*/
+        }
 
         $this->trace
             ->getCurrentSegment()
@@ -113,8 +115,10 @@ class Handler implements BrefHandler {
             ->end();
 
 
-        $this->trace
-            ->end()
-            ->submit(new DaemonSegmentSubmitter($host, (int) $port));
+        $this->trace->end();
+
+        echo json_encode($this->trace) . "\n";
+
+        $this->trace->submit(new DaemonSegmentSubmitter($host, (int) $port));
     }
 }
