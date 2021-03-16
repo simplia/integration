@@ -71,6 +71,7 @@ class Handler implements BrefHandler {
 
     private function startTracing(BrefContext $context): void {
         $this->trace = new Trace();
+        $this->trace->setIndependent(true);
         $this->trace
             ->setTraceHeader($context->getTraceId())
             ->begin(100)
