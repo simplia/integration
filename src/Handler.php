@@ -24,6 +24,8 @@ class Handler implements BrefHandler {
         $this->handler = $handler;
     }
 
+    private ?Trace $trace;
+
     public function handle($event, BrefContext $context) {
         $this->startTracing($context);
         $http = new TraceableHttpClient(HttpClient::create());
@@ -68,7 +70,8 @@ class Handler implements BrefHandler {
     }
 
     private function startTracing(BrefContext $context): void {
-        Trace::getInstance()
+        $this->trace = new Trace();
+        $this->trace
             ->setTraceHeader($context->getTraceId())
             ->begin(100)
             ->setName($_ENV['INTEGRATION_REPOSITORY'] . '--' . $_ENV['INTEGRATION_SHOP'])
@@ -80,7 +83,6 @@ class Handler implements BrefHandler {
     private function endTracing(TraceableHttpClient $httpClient): void {
         [$host, $port] = explode(':', $_ENV['AWS_XRAY_DAEMON_ADDRESS']);
 
-        $rootSegment = Trace::getInstance()->getCurrentSegment();
         foreach ($httpClient->getTracedRequests() as $request) {
             $segment = new HttpSegment();
             $segment
@@ -88,10 +90,11 @@ class Handler implements BrefHandler {
                 ->setMethod($request['method'])
                 ->setResponseCode($request['info']['http_code'])
                 ->setStartEnd($request['info']['start_time'], $request['info']['start_time'] + $request['info']['total_time']);
-            $rootSegment->addSubsegment($segment);
+            $this->trace->addSubsegment($segment);
         }
 
-        $rootSegment->end()
+        $this->trace
+            ->end()
             ->submit(new DaemonSegmentSubmitter($host, (int) $port));
     }
 }
