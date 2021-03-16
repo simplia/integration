@@ -50,7 +50,7 @@ class Handler implements BrefHandler {
         }
 
         if (!empty($_ENV['XRAY_ENABLED'])) {
-            $this->endTracing($http);
+            $this->endTracing($http, 'https://' . $credentials['shop']['host'] . '/api/2/');
         }
     }
 
@@ -76,7 +76,6 @@ class Handler implements BrefHandler {
 
     private function startTracing(BrefContext $context): void {
         $this->trace = new Trace();
-        $this->trace->setIndependent(true);
         $this->trace
             ->setTraceHeader($context->getTraceId())
             ->begin(100)
@@ -86,15 +85,19 @@ class Handler implements BrefHandler {
             ->addAnnotation('Version', $_ENV['INTEGRATION_REPOSITORY_VERSION']);
     }
 
-    private function endTracing(TraceableHttpClient $httpClient): void {
+    private function endTracing(TraceableHttpClient $httpClient, string $apiPrefix): void {
         [$host, $port] = explode(':', $_ENV['AWS_XRAY_DAEMON_ADDRESS']);
 
         foreach ($httpClient->getTracedRequests() as $request) {
             $segment = new HttpSegment();
+            $name = parse_url($request['url'], PHP_URL_HOST);
+            if (strpos($request['url'], $apiPrefix) === 0) {
+                $name = 'API ' . $name;
+            }
             $segment
                 ->setUrl($request['url'])
                 ->setMethod($request['method'])
-                ->setName(parse_url($request['url'], PHP_URL_HOST))
+                ->setName($name)
                 ->setResponseCode($request['info']['http_code'])
                 ->setStartEnd($request['info']['start_time'], $request['info']['start_time'] + $request['info']['total_time']);
             $this->trace->addSubsegment($segment);
