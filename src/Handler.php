@@ -70,11 +70,11 @@ class Handler implements BrefHandler {
     private function startTracing(BrefContext $context): void {
         Trace::getInstance()
             ->setTraceHeader($context->getTraceId())
+            ->begin(100)
             ->setName($_ENV['INTEGRATION_REPOSITORY'] . '--' . $_ENV['INTEGRATION_SHOP'])
-            ->addMetadata('Repository', $_ENV['INTEGRATION_REPOSITORY'])
-            ->addMetadata('Shop', $_ENV['INTEGRATION_SHOP'])
-            ->addMetadata('Version', $_ENV['INTEGRATION_REPOSITORY_VERSION'])
-            ->begin(100);
+            ->addAnnotation('Repository', $_ENV['INTEGRATION_REPOSITORY'])
+            ->addAnnotation('Shop', $_ENV['INTEGRATION_SHOP'])
+            ->addAnnotation('Version', $_ENV['INTEGRATION_REPOSITORY_VERSION']);
     }
 
     private function endTracing(TraceableHttpClient $httpClient): void {
@@ -91,8 +91,7 @@ class Handler implements BrefHandler {
             $rootSegment->addSubsegment($segment);
         }
 
-        $rootSegment->end();
-        Trace::getInstance()->setResponseCode(200)
+        $rootSegment->end()
             ->submit(new DaemonSegmentSubmitter($host, (int) $port));
     }
 }
