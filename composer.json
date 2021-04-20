@@ -4,7 +4,7 @@
     "type": "library",
     "require": {
         "php": ">=7.4",
-        "simplia/api": "^0.0.9",
+        "simplia/api": "^0.0.11",
         "pkerrigan/xray": "^1.2",
         "bref/bref": "^1.2",
         "async-aws/ssm": "^1.2",
