@@ -38,6 +38,7 @@ class Handler implements BrefHandler {
         $apiHttp = new Psr18Client($http);
         $credentials = $this->getCredentialsData();
         $api = Api::withUsernameAuth($apiHttp, $credentials['shop']['host'], $credentials['shop']['user'], $credentials['shop']['password']);
+        $host = $credentials['shop']['host'];
         unset($credentials['shop']);
 
         $fn = $this->handler;
@@ -54,7 +55,7 @@ class Handler implements BrefHandler {
         }
 
         if (!empty($_ENV['XRAY_ENABLED'])) {
-            $this->endTracing($http, 'https://' . $credentials['shop']['host'] . '/api/2/');
+            $this->endTracing($http, 'https://' . $host . '/api/2/');
         }
     }
 
