@@ -2,6 +2,7 @@
 
 namespace Simplia\Integration;
 
+use AsyncAws\DynamoDb\DynamoDbClient;
 use AsyncAws\Ssm\SsmClient;
 use Bref\Context\Context as BrefContext;
 use \Bref\Event\Handler as BrefHandler;
@@ -10,6 +11,9 @@ use Pkerrigan\Xray\Trace;
 use RuntimeException;
 use Simplia\Api\Api;
 use Simplia\Integration\Event\EventDecoder;
+use Simplia\Integration\Storage\KeyValueStorage;
+use Simplia\Integration\Storage\LocalKeyValueStorage;
+use Simplia\Integration\Storage\RemoteKeyValueStorage;
 use Simplia\Integration\Trace\HttpSegment;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\HttpClient\Psr18Client;
@@ -40,6 +44,7 @@ class Handler implements BrefHandler {
         $response = $fn(new Context(
             $http,
             $api,
+            $this->getKeyValueStorage(),
             $credentials,
             EventDecoder::fromInput($event)
         ));
@@ -51,6 +56,14 @@ class Handler implements BrefHandler {
         if (!empty($_ENV['XRAY_ENABLED'])) {
             $this->endTracing($http, 'https://' . $credentials['shop']['host'] . '/api/2/');
         }
+    }
+
+    private function getKeyValueStorage(): KeyValueStorage {
+        if ($_ENV['CREDENTIALS_PARAMETER_PATH'] && $_ENV['AWS_LAMBDA_FUNCTION_NAME']) {
+            return new RemoteKeyValueStorage(new DynamoDbClient(['region' => $_ENV['AWS_REGION']]), 'persistent-storage', $_ENV['AWS_LAMBDA_FUNCTION_NAME']);
+        }
+
+        return new LocalKeyValueStorage(__DIR__ . '/../../../.storage');
     }
 
     private function getCredentialsData(): array {
