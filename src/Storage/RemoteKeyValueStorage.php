@@ -20,16 +20,16 @@ class RemoteKeyValueStorage implements KeyValueStorage {
     }
 
     public function get(string $key) {
-        try {
-            $result = $this->client->getItem(new GetItemInput([
-                'TableName' => $this->table,
-                'ConsistentRead' => true,
-                'Key' => [
-                    'PK' => new AttributeValue(['S' => $this->namespace]),
-                    'SK' => new AttributeValue(['S' => $key]),
-                ],
-            ]));
-        } catch (ResourceNotFoundException $exception) {
+        $result = $this->client->getItem(new GetItemInput([
+            'TableName' => $this->table,
+            'ConsistentRead' => true,
+            'Key' => [
+                'PK' => new AttributeValue(['S' => $this->namespace]),
+                'SK' => new AttributeValue(['S' => $key]),
+            ],
+        ]));
+
+        if (!$result->getItem()) {
             return null;
         }
 
