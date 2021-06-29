@@ -11,6 +11,7 @@ class Context {
     private HttpClientInterface $client;
     private Api $api;
     private KeyValueStorage $keyValueStorage;
+    private LockHandler $lockHandler;
     private array $parameters;
     private ?IntegrationEvent $event;
 
@@ -18,6 +19,7 @@ class Context {
         $this->client = $client;
         $this->api = $api;
         $this->keyValueStorage = $keyValueStorage;
+        $this->lockHandler = new LockHandler($keyValueStorage);
         $this->parameters = $parameters;
         $this->event = $event;
     }
@@ -40,5 +42,9 @@ class Context {
 
     public function getEvent(): ?IntegrationEvent {
         return $this->event;
+    }
+
+    public function getLockHandler(): LockHandler {
+        return $this->lockHandler;
     }
 }

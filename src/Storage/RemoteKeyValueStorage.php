@@ -4,6 +4,7 @@ namespace Simplia\Integration\Storage;
 
 use AsyncAws\DynamoDb\DynamoDbClient;
 use AsyncAws\DynamoDb\Exception\ResourceNotFoundException;
+use AsyncAws\DynamoDb\Input\DeleteItemInput;
 use AsyncAws\DynamoDb\Input\GetItemInput;
 use AsyncAws\DynamoDb\Input\PutItemInput;
 use AsyncAws\DynamoDb\ValueObject\AttributeValue;
@@ -44,6 +45,16 @@ class RemoteKeyValueStorage implements KeyValueStorage {
                 'SK' => new AttributeValue(['S' => $key]),
                 'value' => new AttributeValue(['S' => json_encode($value, JSON_THROW_ON_ERROR)]),
                 'date' => new AttributeValue(['S' => date('Y-m-d H:i:s')]),
+            ],
+        ]));
+    }
+
+    public function remove(string $key): void {
+        $this->client->deleteItem(new DeleteItemInput([
+            'TableName' => $this->table,
+            'Key' => [
+                'PK' => new AttributeValue(['S' => $this->namespace]),
+                'SK' => new AttributeValue(['S' => $key]),
             ],
         ]));
     }

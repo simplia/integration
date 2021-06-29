@@ -34,4 +34,10 @@ class LocalKeyValueStorage implements KeyValueStorage {
         }
         file_put_contents($this->getKeyPath($key), json_encode($value, JSON_THROW_ON_ERROR));
     }
+
+    public function remove(string $key): void {
+        if (file_exists($this->getKeyPath($key))) {
+            unlink($this->getKeyPath($key));
+        }
+    }
 }
