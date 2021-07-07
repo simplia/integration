@@ -18,6 +18,7 @@ use Simplia\Integration\Trace\HttpSegment;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\HttpClient\Psr18Client;
 use Symfony\Component\HttpClient\TraceableHttpClient;
+use function Sentry\captureException;
 
 class Handler implements BrefHandler {
 
@@ -31,31 +32,36 @@ class Handler implements BrefHandler {
     private ?Trace $trace;
 
     public function handle($event, BrefContext $context) {
-        if (!empty($_ENV['XRAY_ENABLED'])) {
-            $this->startTracing($context);
-        }
-        $http = new TraceableHttpClient(HttpClient::create());
-        $apiHttp = new Psr18Client($http);
-        $credentials = $this->getCredentialsData();
-        $api = Api::withUsernameAuth($apiHttp, $credentials['shop']['host'], $credentials['shop']['user'], $credentials['shop']['password']);
-        $host = $credentials['shop']['host'];
-        unset($credentials['shop']);
+        try {
+            if (!empty($_ENV['XRAY_ENABLED'])) {
+                $this->startTracing($context);
+            }
+            $http = new TraceableHttpClient(HttpClient::create());
+            $apiHttp = new Psr18Client($http);
+            $credentials = $this->getCredentialsData();
+            $api = Api::withUsernameAuth($apiHttp, $credentials['shop']['host'], $credentials['shop']['user'], $credentials['shop']['password']);
+            $host = $credentials['shop']['host'];
+            unset($credentials['shop']);
 
-        $fn = $this->handler;
-        $response = $fn(new Context(
-            $http,
-            $api,
-            $this->getKeyValueStorage(),
-            $credentials,
-            EventDecoder::fromInput($event)
-        ));
+            $fn = $this->handler;
+            $response = $fn(new Context(
+                $http,
+                $api,
+                $this->getKeyValueStorage(),
+                $credentials,
+                EventDecoder::fromInput($event)
+            ));
 
-        if (!empty($response)) {
-            echo json_encode($response, JSON_THROW_ON_ERROR);
-        }
+            if (!empty($response)) {
+                echo json_encode($response, JSON_THROW_ON_ERROR);
+            }
 
-        if (!empty($_ENV['XRAY_ENABLED'])) {
-            $this->endTracing($http, 'https://' . $host . '/api/2/');
+            if (!empty($_ENV['XRAY_ENABLED'])) {
+                $this->endTracing($http, 'https://' . $host . '/api/2/');
+            }
+        } catch (\Throwable $exception) {
+            captureException($exception);
+            throw $exception;
         }
     }
 
