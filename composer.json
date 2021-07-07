@@ -12,7 +12,8 @@
         "psr/http-factory": "^1.0",
         "psr/http-client": "^1.0",
         "async-aws/dynamo-db": "^1.1",
-        "ext-json": "*"
+        "ext-json": "*",
+        "sentry/sdk": "^3.1"
     },
     "autoload": {
         "psr-4": {
