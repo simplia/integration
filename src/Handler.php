@@ -44,13 +44,14 @@ class Handler implements BrefHandler {
             unset($credentials['shop']);
 
             $fn = $this->handler;
+            $typedInput = EventDecoder::fromInput($event);
             $response = $fn(new Context(
                 $http,
                 $api,
                 $this->getKeyValueStorage(),
                 $credentials,
-                EventDecoder::fromInput($event)
-            ));
+                $typedInput
+            ), $typedInput);
 
             if (!empty($response)) {
                 echo json_encode($response, JSON_THROW_ON_ERROR);
