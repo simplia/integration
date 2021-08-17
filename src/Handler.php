@@ -36,7 +36,7 @@ class Handler implements BrefHandler {
             if (!empty($_ENV['XRAY_ENABLED'])) {
                 $this->startTracing($context);
             }
-            $http = new TraceableHttpClient(HttpClient::create());
+            $http = new TraceableHttpClient(HttpClient::create(['timeout' => 5 * 60]));
             $apiHttp = new Psr18Client($http);
             $credentials = $this->getCredentialsData();
             $api = Api::withUsernameAuth($apiHttp, $credentials['shop']['host'], $credentials['shop']['user'], $credentials['shop']['password']);
