@@ -89,6 +89,7 @@
                                                         <xs:enumeration value="url"/>
                                                         <xs:enumeration value="password"/>
                                                         <xs:enumeration value="int"/>
+                                                        <xs:enumeration value="json"/>
                                                     </xs:restriction>
                                                 </xs:simpleType>
                                             </xs:attribute>
