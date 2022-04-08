@@ -24,8 +24,8 @@ manifest:
     before_script:
         - apk update
         - apk add libxml2-utils curl
-        - curl https://raw.githubusercontent.com/simplia/integration/master/assets/manifest.xsd --output /tmp/manifest.xsd
     script:
+        - curl https://raw.githubusercontent.com/simplia/integration/master/assets/manifest.xsd --output /tmp/manifest.xsd
         - xmllint --schema /tmp/manifest.xsd manifest.xml --noout
 
 unit:
