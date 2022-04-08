@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="manifest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="description" type="xs:string"/>
+                <xs:element name="actions">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="action">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="schedule"/>
+                                        <xs:enumeration value="order.created"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="shop" minOccurs="0">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="permission">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="articles:get"/>
+                                        <xs:enumeration value="articles:list"/>
+                                        <xs:enumeration value="availabilities:get"/>
+                                        <xs:enumeration value="availabilities:list"/>
+                                        <xs:enumeration value="bundle:delete"/>
+                                        <xs:enumeration value="bundle:update"/>
+                                        <xs:enumeration value="documents:create-stock"/>
+                                        <xs:enumeration value="documents:get"/>
+                                        <xs:enumeration value="documents:list"/>
+                                        <xs:enumeration value="documents:update-price"/>
+                                        <xs:enumeration value="orders:add"/>
+                                        <xs:enumeration value="orders:get"/>
+                                        <xs:enumeration value="orders:list"/>
+                                        <xs:enumeration value="orders:put"/>
+                                        <xs:enumeration value="package:get"/>
+                                        <xs:enumeration value="packages:list"/>
+                                        <xs:enumeration value="payment-method:get"/>
+                                        <xs:enumeration value="payment-method:list"/>
+                                        <xs:enumeration value="payments:get"/>
+                                        <xs:enumeration value="payments:list"/>
+                                        <xs:enumeration value="product:create"/>
+                                        <xs:enumeration value="product:list"/>
+                                        <xs:enumeration value="product:update"/>
+                                        <xs:enumeration value="stock-items:batch-update"/>
+                                        <xs:enumeration value="stock-items:get"/>
+                                        <xs:enumeration value="stock-items:list"/>
+                                        <xs:enumeration value="stock-items:update-location"/>
+                                        <xs:enumeration value="stock-rooms:get"/>
+                                        <xs:enumeration value="stock-rooms:list"/>
+                                        <xs:enumeration value="text-pages:add"/>
+                                        <xs:enumeration value="text-pages:delete"/>
+                                        <xs:enumeration value="text-pages:get"/>
+                                        <xs:enumeration value="text-pages:list"/>
+                                        <xs:enumeration value="text-pages:update"/>
+                                        <xs:enumeration value="transport-method:get"/>
+                                        <xs:enumeration value="transport-method:list"/>
+                                        <xs:enumeration value="variant:create"/>
+                                        <xs:enumeration value="variant:update"/>
+                                        <xs:enumeration value="voucher:activate"/>
+                                        <xs:enumeration value="voucher:apply"/>
+                                        <xs:enumeration value="voucher:delete-lock"/>
+                                        <xs:enumeration value="voucher:find"/>
+                                        <xs:enumeration value="voucher:get"/>
+                                        <xs:enumeration value="voucher:list-locks"/>
+                                        <xs:enumeration value="voucher:lock"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="attributes" minOccurs="0">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="attribute" maxOccurs="unbounded" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:simpleContent>
+                                        <xs:extension base="xs:string">
+                                            <xs:attribute name="type" use="required">
+                                                <xs:simpleType>
+                                                    <xs:restriction base="xs:string">
+                                                        <xs:enumeration value="string"/>
+                                                        <xs:enumeration value="url"/>
+                                                        <xs:enumeration value="password"/>
+                                                        <xs:enumeration value="int"/>
+                                                    </xs:restriction>
+                                                </xs:simpleType>
+                                            </xs:attribute>
+                                        </xs:extension>
+                                    </xs:simpleContent>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

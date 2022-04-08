@@ -18,6 +18,16 @@ analyze:
         paths:
             - .composer
 
+manifest:
+    stage: test
+    image: alpine:latest
+    before_script:
+        - apk update
+        - apk add libxml2-utils curl
+        - curl https://raw.githubusercontent.com/simplia/integration/master/assets/manifest.xsd --output /tmp/manifest.xsd
+    script:
+        - xmllint --schema /tmp/manifest.xsd manifest.xml --noout
+
 unit:
     stage: test
     image: thecodingmachine/php:8.0-v4-cli
