@@ -21,7 +21,7 @@
                 <xs:element name="shop" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
-                            <xs:element name="permission">
+                            <xs:element name="permission" maxOccurs="unbounded">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
                                         <xs:enumeration value="articles:get"/>
