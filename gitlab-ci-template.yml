@@ -10,7 +10,7 @@ analyze:
         entrypoint: [ "" ]
     before_script:
         - composer config --global  cache-dir $PWD/.composer
-        - composer install
+        - composer install --ignore-platform-reqs
     script:
         - phpstan analyse
     cache:
