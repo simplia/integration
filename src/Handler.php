@@ -38,8 +38,10 @@ class Handler implements BrefHandler {
             }
             $http = new TraceableHttpClient(HttpClient::create(['timeout' => 5 * 60]));
             $apiHttp = new Psr18Client($http);
-            $credentials = $this->getCredentialsData();
-            $api = Api::withUsernameAuth($apiHttp, $credentials['shop']['host'], $credentials['shop']['user'], $credentials['shop']['password']);
+            [$credentials, $shopCredentials] = $this->getCredentialsData();
+            [, $shopMeta,] = explode('.', $shopCredentials);
+
+            $api = Api::withJWT($apiHttp, json_decode(base64_decode($shopMeta, true), true, 512, JSON_THROW_ON_ERROR)['host'], $shopCredentials);
             $host = $credentials['shop']['host'];
             unset($credentials['shop']);
 
@@ -75,14 +77,22 @@ class Handler implements BrefHandler {
     }
 
     private function getCredentialsData(): array {
+        $shopCredentials = null;
         if ($_ENV['CREDENTIALS_PARAMETER_PATH']) {
             $ssm = new SsmClient([
                 'region' => $_ENV['AWS_DEFAULT_REGION'],
             ]);
-            $credentialsParameter = $ssm->getParameter([
-                'Name' => $_ENV['CREDENTIALS_PARAMETER_PATH'],
+            $credentialsParameter = null;
+            foreach ($ssm->getParameters([
+                'Names' => [$_ENV['CREDENTIALS_PARAMETER_PATH'], $_ENV['SHOP_CREDENTIALS_PARAMETER_PATH']],
                 'WithDecryption' => true,
-            ])->getParameter();
+            ])->getParameters() as $parameter) {
+                if ($parameter->getName() === $_ENV['CREDENTIALS_PARAMETER_PATH']) {
+                    $credentialsParameter = $parameter;
+                } elseif ($parameter->getName() === $_ENV['SHOP_CREDENTIALS_PARAMETER_PATH']) {
+                    $shopCredentials = json_decode($parameter->getValue(), true)['JWT'];
+                }
+            }
             if (!$credentialsParameter) {
                 throw new RuntimeException('Cannot load credentials');
             }
@@ -91,7 +101,10 @@ class Handler implements BrefHandler {
             $credentialsContent = file_get_contents(__DIR__ . '/../../../.credentials.json');
         }
 
-        return json_decode($credentialsContent, true, 512, JSON_THROW_ON_ERROR);
+        return [
+            json_decode($credentialsContent, true, 512, JSON_THROW_ON_ERROR),
+            $shopCredentials,
+        ];
     }
 
     private function startTracing(BrefContext $context): void {
