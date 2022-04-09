@@ -32,10 +32,10 @@ class Handler implements BrefHandler {
     private ?Trace $trace;
 
     public function handle($event, BrefContext $context) {
+        if (!empty($_ENV['XRAY_ENABLED'])) {
+            $this->startTracing($context);
+        }
         try {
-            if (!empty($_ENV['XRAY_ENABLED'])) {
-                $this->startTracing($context);
-            }
             $http = new TraceableHttpClient(HttpClient::create(['timeout' => 5 * 60]));
             $apiHttp = new Psr18Client($http);
             [$credentials, $shopCredentials] = $this->getCredentialsData();
@@ -63,6 +63,10 @@ class Handler implements BrefHandler {
             }
         } catch (\Throwable $exception) {
             captureException($exception);
+            if (!empty($_ENV['XRAY_ENABLED']) && isset($http, $host)) {
+                $this->trace->setError(true);
+                $this->endTracing($http, 'https://' . $host . '/api/2/');
+            }
             throw $exception;
         }
     }
