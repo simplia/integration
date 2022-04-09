@@ -41,9 +41,8 @@ class Handler implements BrefHandler {
             [$credentials, $shopCredentials] = $this->getCredentialsData();
             [, $shopMeta,] = explode('.', $shopCredentials);
 
-            $api = Api::withJWT($apiHttp, json_decode(base64_decode($shopMeta, true), true, 512, JSON_THROW_ON_ERROR)['host'], $shopCredentials);
-            $host = $credentials['shop']['host'];
-            unset($credentials['shop']);
+            $host = json_decode(base64_decode($shopMeta, true), true, 512, JSON_THROW_ON_ERROR)['host'];
+            $api = Api::withJWT($apiHttp, $host, $shopCredentials);
 
             $fn = $this->handler;
             $typedInput = EventDecoder::fromInput($event);
