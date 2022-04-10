@@ -18,6 +18,7 @@ use Simplia\Integration\Trace\HttpSegment;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\HttpClient\Psr18Client;
 use Symfony\Component\HttpClient\TraceableHttpClient;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 use function Sentry\captureException;
 
 class Handler implements BrefHandler {
@@ -38,10 +39,7 @@ class Handler implements BrefHandler {
         try {
             $http = new TraceableHttpClient(HttpClient::create(['timeout' => 5 * 60]));
             $apiHttp = new Psr18Client($http);
-            [$credentials, $shopCredentials] = $this->getCredentialsData();
-            [, $shopMeta,] = explode('.', $shopCredentials);
-
-            $host = json_decode(base64_decode($shopMeta, true), true, 512, JSON_THROW_ON_ERROR)['host'];
+            [$credentials, $shopCredentials, $host] = $this->getCredentialsData($http);
             $api = Api::withJWT($apiHttp, $host, $shopCredentials);
 
             $fn = $this->handler;
@@ -72,16 +70,16 @@ class Handler implements BrefHandler {
     }
 
     private function getKeyValueStorage(): KeyValueStorage {
-        if ($_ENV['CREDENTIALS_PARAMETER_PATH'] && $_ENV['AWS_LAMBDA_FUNCTION_NAME']) {
+        if (isset($_ENV['CREDENTIALS_PARAMETER_PATH'], $_ENV['AWS_LAMBDA_FUNCTION_NAME'])) {
             return new RemoteKeyValueStorage(new DynamoDbClient(['region' => $_ENV['AWS_REGION']]), 'persistent-storage', $_ENV['AWS_LAMBDA_FUNCTION_NAME']);
         }
 
         return new LocalKeyValueStorage(__DIR__ . '/../../../.storage.json');
     }
 
-    private function getCredentialsData(): array {
+    private function getCredentialsData(HttpClientInterface $httpClient): array {
         $shopCredentials = null;
-        if ($_ENV['CREDENTIALS_PARAMETER_PATH']) {
+        if (isset($_ENV['CREDENTIALS_PARAMETER_PATH'])) {
             $ssm = new SsmClient([
                 'region' => $_ENV['AWS_DEFAULT_REGION'],
             ]);
@@ -99,15 +97,38 @@ class Handler implements BrefHandler {
             if (!$credentialsParameter) {
                 throw new RuntimeException('Cannot load credentials');
             }
-            $credentialsContent = $credentialsParameter->getValue();
+            $credentialsContent = json_decode($credentialsParameter->getValue(), true, 512, JSON_THROW_ON_ERROR);
+            $host = $this->getHostFromJWT($credentialsContent);
         } else {
-            $credentialsContent = file_get_contents(__DIR__ . '/../../../.credentials.json');
+            $shopCredentials = $_ENV['CREDENTIALS'];
+            $host = $this->getHostFromJWT($shopCredentials);
+            $localAttributes = [];
+            $path = __DIR__ . '/../../../.credentials.json';
+            if ($_ENV['ATTRIBUTES_MODE'] !== 'remote' && file_exists($path)) {
+                $localAttributes = json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
+            }
+            $remoteAttributes = [];
+            if ($_ENV['ATTRIBUTES_MODE'] !== 'local') {
+                $remoteAttributes = json_decode($httpClient->request('GET', 'https://' . $host . '/_/integration/attributes', [
+                    'headers' => [
+                        'Authorization' => 'Beaerer ' . base64_encode($shopCredentials),
+                    ],
+                ])->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            }
+            $credentialsContent = array_merge($remoteAttributes,$localAttributes);
         }
 
         return [
-            json_decode($credentialsContent, true, 512, JSON_THROW_ON_ERROR),
+            $credentialsContent,
             $shopCredentials,
+            $host,
         ];
+    }
+
+    private function getHostFromJWT(string $token): string {
+        [, $shopMeta,] = explode('.', $token);
+
+        return json_decode(base64_decode($shopMeta, true), true, 512, JSON_THROW_ON_ERROR)['host'];
     }
 
     private function startTracing(BrefContext $context): void {
