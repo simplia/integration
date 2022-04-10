@@ -25,5 +25,10 @@
             "name": "Petr Soukup",
             "email": "soukup@simplia.cz"
         }
+    ],
+    "bin": [
+        "bin/run.bat",
+        "bin/run-tests.bat",
+        "bin/run-phpstan.bat"
     ]
 }
