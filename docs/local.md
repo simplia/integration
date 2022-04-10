@@ -3,10 +3,10 @@ Závislosti jsou řešeny standardně přes [composer](https://getcomposer.org/)
 
 ```bash
 # instalace závislostí tak, jak jsou v produkci
-docker run --rm -it -v ${PWD}:/app composer install --ignore-platform-reqs
+docker run --rm -it -v ${PWD}:/app composer install
 
 # aktualizace závislostí na aktuální verze
-docker run --rm -it -v ${PWD}:/app composer update -W --ignore-platform-reqs
+docker run --rm -it -v ${PWD}:/app composer update -W
 ```
 
 
