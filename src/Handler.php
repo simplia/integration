@@ -111,7 +111,7 @@ class Handler implements BrefHandler {
             if ($_ENV['ATTRIBUTES_MODE'] !== 'local') {
                 $remoteAttributes = json_decode($httpClient->request('GET', 'https://' . $host . '/_/integration/attributes', [
                     'headers' => [
-                        'Authorization' => 'Beaerer ' . base64_encode($shopCredentials),
+                        'Authorization' => 'Bearer ' . base64_encode($shopCredentials),
                     ],
                 ])->getContent(), true, 512, JSON_THROW_ON_ERROR);
             }
