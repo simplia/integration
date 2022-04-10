@@ -98,7 +98,7 @@ class Handler implements BrefHandler {
                 throw new RuntimeException('Cannot load credentials');
             }
             $credentialsContent = json_decode($credentialsParameter->getValue(), true, 512, JSON_THROW_ON_ERROR)['JWT'];
-            $host = $this->getHostFromJWT($credentialsParameter->getValue());
+            $host = $this->getHostFromJWT($credentialsContent);
         } else {
             $shopCredentials = $_ENV['CREDENTIALS'];
             $host = $this->getHostFromJWT($shopCredentials);
