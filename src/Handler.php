@@ -76,7 +76,7 @@ class Handler implements BrefHandler {
             return new RemoteKeyValueStorage(new DynamoDbClient(['region' => $_ENV['AWS_REGION']]), 'persistent-storage', $_ENV['AWS_LAMBDA_FUNCTION_NAME']);
         }
 
-        return new LocalKeyValueStorage(__DIR__ . '/../../../.storage');
+        return new LocalKeyValueStorage(__DIR__ . '/../../../.storage.json');
     }
 
     private function getCredentialsData(): array {

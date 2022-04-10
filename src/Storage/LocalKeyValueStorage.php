@@ -6,38 +6,43 @@ use RuntimeException;
 
 class LocalKeyValueStorage implements KeyValueStorage {
 
-    private string $directory;
+    private string $file;
 
-    public function __construct(string $directory) {
-        $this->directory = $directory;
+    public function __construct(string $file) {
+        $this->file = $file;
     }
 
     private function getKeyPath(string $key): string {
-        return $this->directory . DIRECTORY_SEPARATOR . md5($key) . '.json';
+        return $this->file . DIRECTORY_SEPARATOR . md5($key) . '.json';
     }
 
-
     public function get(string $key) {
-        if (!is_dir($this->directory)) {
-            throw new RuntimeException('Missing key value storage directory');
-        }
-        if (file_exists($this->getKeyPath($key))) {
-            return json_decode(file_get_contents($this->getKeyPath($key)), true, 512, JSON_THROW_ON_ERROR);
-        }
-
-        return null;
+        return $this->load()[$key] ?? null;
     }
 
     public function set(string $key, $value): void {
-        if (!is_dir($this->directory)) {
-            throw new RuntimeException('Missing key value storage directory');
-        }
-        file_put_contents($this->getKeyPath($key), json_encode($value, JSON_THROW_ON_ERROR));
+        $data = $this->load();
+        $data[$key] = $value;
+        $this->write($data);
     }
 
     public function remove(string $key): void {
-        if (file_exists($this->getKeyPath($key))) {
-            unlink($this->getKeyPath($key));
+        $data = $this->load();
+        if (array_key_exists($key, $data)) {
+            unset($data[$key]);
+            $this->write($data);
         }
+    }
+
+    private function write(array $data): void {
+        file_put_contents($this->file, json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), true);
+    }
+
+    private function load(): array {
+        if (file_exists($this->file)) {
+            return json_decode(file_get_contents($this->file), true, 512, JSON_THROW_ON_ERROR);
+        }
+
+        return [];
     }
 }
