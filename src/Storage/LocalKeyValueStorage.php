@@ -35,7 +35,11 @@ class LocalKeyValueStorage implements KeyValueStorage {
     }
 
     private function write(array $data): void {
-        file_put_contents($this->file, json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), true);
+        $encoded = json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if (strlen($encoded) > 380 * 1024) {
+            throw new RuntimeException('Maximum item length after json_encode is 380kB');
+        }
+        file_put_contents($this->file, $encoded);
     }
 
     private function load(): array {
