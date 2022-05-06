@@ -13,6 +13,9 @@ analyze:
         - composer install --ignore-platform-reqs
     script:
         - phpstan analyse
+    rules:
+        - exists:
+              - "composer.json"
     cache:
         key: "package_$CI_COMMIT_BRANCH"
         paths:
@@ -40,6 +43,10 @@ unit:
         - composer install
     script:
         - phpunit tests --log-junit phpunit-report.xml
+
+    rules:
+        - exists:
+              - "tests/"
     cache:
         key: "package_$CI_COMMIT_BRANCH"
         paths:
