@@ -27,11 +27,8 @@
         }
     ],
     "bin": [
-        "bin/run.bat",
         "bin/run.sh",
-        "bin/run-tests.bat",
         "bin/run-tests.sh",
-        "bin/run-phpstan.bat",
         "bin/run-phpstan.sh"
     ]
 }
