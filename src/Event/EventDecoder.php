@@ -3,6 +3,7 @@
 namespace Simplia\Integration\Event;
 
 use Simplia\Integration\Event\Order\NewOrderEvent;
+use Simplia\Integration\Event\Order\NewStockInputEvent;
 
 class EventDecoder {
     public static function fromInput(array $input): ?IntegrationEvent {
@@ -18,6 +19,8 @@ class EventDecoder {
         switch ($type) {
             case 'order.new' :
                 return new NewOrderEvent($input['id']);
+            case 'stock-input.new' :
+                return new NewStockInputEvent($input['id']);
         }
 
         return null;
