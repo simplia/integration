@@ -1,6 +1,6 @@
 <?php
 
-namespace Simplia\Integration\Event\Order;
+namespace Simplia\Integration\Event\Document;
 
 use Simplia\Integration\Event\IntegrationEvent;
 
