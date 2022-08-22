@@ -3,7 +3,7 @@
 namespace Simplia\Integration\Event;
 
 use Simplia\Integration\Event\Order\NewOrderEvent;
-use Simplia\Integration\Event\Order\NewStockInputEvent;
+use Simplia\Integration\Event\Stock\NewStockInputEvent;
 
 class EventDecoder {
     public static function fromInput(array $input): ?IntegrationEvent {

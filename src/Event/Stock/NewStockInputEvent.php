@@ -1,6 +1,6 @@
 <?php
 
-namespace Simplia\Integration\Event\Order;
+namespace Simplia\Integration\Event\Stock;
 
 use Simplia\Integration\Event\IntegrationEvent;
 
