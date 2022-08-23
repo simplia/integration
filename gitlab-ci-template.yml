@@ -6,7 +6,7 @@ stages:
 analyze:
     stage: test
     image:
-        name: ghcr.io/phpstan/phpstan:1.8.2-php8.1
+        name: ghcr.io/phpstan/phpstan:latest-php8.1
         entrypoint: [ "" ]
     before_script:
         - composer config --global  cache-dir $PWD/.composer
