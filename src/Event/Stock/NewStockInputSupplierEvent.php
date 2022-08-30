@@ -4,7 +4,7 @@ namespace Simplia\Integration\Event\Stock;
 
 use Simplia\Integration\Event\IntegrationEvent;
 
-class NewStockInputEvent implements IntegrationEvent {
+class NewStockInputSupplierEvent implements IntegrationEvent {
     private string $id;
 
     public function __construct(string $id) {
