@@ -46,7 +46,7 @@ unit:
 
     rules:
         - exists:
-              - "tests/"
+              - "tests/**/*"
     cache:
         key: "package_$CI_COMMIT_BRANCH"
         paths:
