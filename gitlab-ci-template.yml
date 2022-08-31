@@ -38,6 +38,12 @@ unit:
         when: always
         reports:
             junit: phpunit-report.xml
+    variables:
+        PHP_EXTENSION_GD: 1
+        PHP_EXTENSION_BCMATH: 1
+        PHP_EXTENSION_EXIF: 1
+        PHP_EXTENSION_GETTEXT: 1
+        PHP_EXTENSION_INTL: 1
     before_script:
         - composer config --global  cache-dir $PWD/.composer
         - composer install
