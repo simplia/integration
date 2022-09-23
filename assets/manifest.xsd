@@ -34,6 +34,7 @@
                                         <xs:enumeration value="documents:get"/>
                                         <xs:enumeration value="documents:list"/>
                                         <xs:enumeration value="documents:update-price"/>
+                                        <xs:enumeration value="emails:send"/>
                                         <xs:enumeration value="orders:add"/>
                                         <xs:enumeration value="orders:get"/>
                                         <xs:enumeration value="orders:list"/>
