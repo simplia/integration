@@ -10,6 +10,7 @@
                             <xs:element name="action">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
+                                        <xs:enumeration value="rest-api"/>
                                         <xs:enumeration value="schedule"/>
                                         <xs:enumeration value="order.created"/>
                                     </xs:restriction>
