@@ -3,10 +3,10 @@
     "description": "",
     "type": "library",
     "require": {
-        "php": ">=7.4",
+        "php": ">=8.1",
         "simplia/api": "^0.1",
         "pkerrigan/xray": "^1.2",
-        "bref/bref": "^1.2",
+        "bref/bref": "^2.0",
         "async-aws/ssm": "^1.2",
         "symfony/http-client": "^5.2",
         "psr/http-factory": "^1.0",
