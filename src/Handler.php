@@ -52,10 +52,6 @@ class Handler implements BrefHandler {
                 $typedInput
             ), $typedInput);
 
-            if (!empty($response)) {
-                echo json_encode($response, JSON_THROW_ON_ERROR);
-            }
-
             if (!empty($_ENV['XRAY_ENABLED'])) {
                 $this->endTracing($http, 'https://' . $host . '/api/2/');
             }
@@ -67,6 +63,8 @@ class Handler implements BrefHandler {
             }
             throw $exception;
         }
+
+        return $response ?? null;
     }
 
     private function getKeyValueStorage(): KeyValueStorage {
