@@ -17,6 +17,8 @@ class EventDecoder {
         }
 
         switch ($type) {
+            case 'http.request' :
+                return new HttpRequest($input['responseS3Destination']);
             case 'order.new' :
                 return new NewOrderEvent($input['id']);
             case 'stock-input-supplier.new' :
