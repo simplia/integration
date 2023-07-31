@@ -63,6 +63,9 @@
                                         <xs:enumeration value="text-pages:update"/>
                                         <xs:enumeration value="transport-method:get"/>
                                         <xs:enumeration value="transport-method:list"/>
+                                        <xs:enumeration value="users:list"/>
+                                        <xs:enumeration value="users:get"/>
+                                        <xs:enumeration value="users:update"/>
                                         <xs:enumeration value="variant:create"/>
                                         <xs:enumeration value="variant:update"/>
                                         <xs:enumeration value="voucher:activate"/>
