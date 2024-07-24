@@ -40,6 +40,7 @@
                                         <xs:enumeration value="orders:get"/>
                                         <xs:enumeration value="orders:list"/>
                                         <xs:enumeration value="orders:put"/>
+                                        <xs:enumeration value="orders:update"/>
                                         <xs:enumeration value="package:get"/>
                                         <xs:enumeration value="packages:list"/>
                                         <xs:enumeration value="payment-method:get"/>
