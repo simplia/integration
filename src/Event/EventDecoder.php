@@ -2,6 +2,7 @@
 
 namespace Simplia\Integration\Event;
 
+use Simplia\Integration\Event\Order\AdminBatchOrdersEvent;
 use Simplia\Integration\Event\Order\NewOrderEvent;
 use Simplia\Integration\Event\Stock\NewStockInputSupplierEvent;
 
@@ -21,6 +22,8 @@ class EventDecoder {
                 return new HttpRequest($input['responseS3Destination']);
             case 'order.new' :
                 return new NewOrderEvent($input['id']);
+            case 'admin.order.batch' :
+                return new AdminBatchOrdersEvent($input['ids']);
             case 'stock-input-supplier.new' :
                 return new NewStockInputSupplierEvent($input['id']);
         }
