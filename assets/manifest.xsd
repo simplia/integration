@@ -6,18 +6,53 @@
                 <xs:element name="description" type="xs:string"/>
                 <xs:element name="actions">
                     <xs:complexType>
-                        <xs:sequence>
+                        <xs:choice maxOccurs="unbounded">
                             <xs:element name="action">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
                                         <xs:enumeration value="rest-api"/>
                                         <xs:enumeration value="schedule"/>
                                         <xs:enumeration value="order.created"/>
-                                        <xs:enumeration value="admin.order.batch"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
-                        </xs:sequence>
+                            <xs:element name="admin-action">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="label" type="xs:string"/>
+                                        <xs:element name="submit" type="xs:string"/>
+                                        <xs:choice maxOccurs="unbounded">
+                                            <xs:element name="input-choice" minOccurs="0">
+                                                <xs:complexType>
+                                                    <xs:sequence>
+                                                        <xs:element name="choice" maxOccurs="unbounded">
+                                                            <xs:complexType>
+                                                                <xs:simpleContent>
+                                                                    <xs:extension base="xs:string">
+                                                                        <xs:attribute name="value" type="xs:string" use="required"/>
+                                                                    </xs:extension>
+                                                                </xs:simpleContent>
+                                                            </xs:complexType>
+                                                        </xs:element>
+                                                    </xs:sequence>
+                                                    <xs:attribute name="name" type="xs:string" use="required"/>
+                                                    <xs:attribute name="expanded" type="xs:boolean" use="optional"/>
+                                                </xs:complexType>
+                                            </xs:element>
+                                        </xs:choice>
+                                    </xs:sequence>
+                                    <xs:attribute name="context" use="required">
+                                        <xs:simpleType>
+                                            <xs:restriction base="xs:string">
+                                                <xs:enumeration value="admin.user.batch"/>
+                                                <xs:enumeration value="admin.order.batch"/>
+                                                <xs:enumeration value="admin.product.batch"/>
+                                            </xs:restriction>
+                                        </xs:simpleType>
+                                    </xs:attribute>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:choice>
                     </xs:complexType>
                 </xs:element>
                 <xs:element name="shop" minOccurs="0">
