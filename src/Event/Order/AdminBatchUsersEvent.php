@@ -2,6 +2,6 @@
 
 namespace Simplia\Integration\Event\Order;
 
-class AdminBatchOrdersEvent extends AdminBatchEvent {
+class AdminBatchUsersEvent extends AdminBatchEvent {
 
 }

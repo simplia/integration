@@ -3,6 +3,8 @@
 namespace Simplia\Integration\Event;
 
 use Simplia\Integration\Event\Order\AdminBatchOrdersEvent;
+use Simplia\Integration\Event\Order\AdminBatchProductsEvent;
+use Simplia\Integration\Event\Order\AdminBatchUsersEvent;
 use Simplia\Integration\Event\Order\NewOrderEvent;
 use Simplia\Integration\Event\Stock\NewStockInputSupplierEvent;
 
@@ -23,7 +25,11 @@ class EventDecoder {
             case 'order.new' :
                 return new NewOrderEvent($input['id']);
             case 'admin.order.batch' :
-                return new AdminBatchOrdersEvent($input['ids']);
+                return new AdminBatchOrdersEvent($input['ids'], $input['formData'] ?? []);
+            case 'admin.product.batch' :
+                return new AdminBatchProductsEvent($input['ids'], $input['formData'] ?? []);
+            case 'admin.user.batch' :
+                return new AdminBatchUsersEvent($input['ids'], $input['formData'] ?? []);
             case 'stock-input-supplier.new' :
                 return new NewStockInputSupplierEvent($input['id']);
         }
