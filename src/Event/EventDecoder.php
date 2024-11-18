@@ -6,7 +6,9 @@ use Simplia\Integration\Event\Order\AdminBatchOrdersEvent;
 use Simplia\Integration\Event\Order\AdminBatchProductsEvent;
 use Simplia\Integration\Event\Order\AdminBatchUsersEvent;
 use Simplia\Integration\Event\Order\NewOrderEvent;
+use Simplia\Integration\Event\Shipment\ShipmentNormalizeEvent;
 use Simplia\Integration\Event\Stock\NewStockInputSupplierEvent;
+use Simplia\Integration\Model\Shipment\Shipment;
 
 class EventDecoder {
     public static function fromInput(array $input): ?IntegrationEvent {
@@ -32,6 +34,8 @@ class EventDecoder {
                 return new AdminBatchUsersEvent($input['ids'], $input['formData'] ?? []);
             case 'stock-input-supplier.new' :
                 return new NewStockInputSupplierEvent($input['id']);
+            case 'shipment.normalize' :
+                return new ShipmentNormalizeEvent($input['carrierCode'], Shipment::fromJson($input['shipment']));
         }
 
         return null;

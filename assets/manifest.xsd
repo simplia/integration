@@ -13,6 +13,7 @@
                                         <xs:enumeration value="rest-api"/>
                                         <xs:enumeration value="schedule"/>
                                         <xs:enumeration value="order.created"/>
+                                        <xs:enumeration value="shipment.normalize"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
