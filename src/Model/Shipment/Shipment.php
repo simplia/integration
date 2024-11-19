@@ -18,7 +18,7 @@ class Shipment implements \JsonSerializable {
     private ?string $zip;
     private ?string $region;
     private ?string $countryCode;
-    private ?string $routing;
+    private ?array $routing;
     private ?string $branchCode;
 
     private ?string $phone;
@@ -111,11 +111,11 @@ class Shipment implements \JsonSerializable {
         return $this;
     }
 
-    public function getRouting(): ?string {
+    public function getRouting(): ?array {
         return $this->routing;
     }
 
-    public function setRouting(?string $routing): self {
+    public function setRouting(?array $routing): self {
         $this->routing = $routing;
 
         return $this;
