@@ -6,7 +6,7 @@ stages:
 analyze:
     stage: test
     image:
-        name: ghcr.io/phpstan/phpstan:latest-php8.1
+        name: ghcr.io/phpstan/phpstan:latest-php8.2
         entrypoint: [ "" ]
     before_script:
         - composer config --global  cache-dir $PWD/.composer
@@ -33,7 +33,7 @@ manifest:
 
 unit:
     stage: test
-    image: thecodingmachine/php:8.1-v4-cli
+    image: thecodingmachine/php:8.2-v4-cli
     artifacts:
         when: always
         reports:
