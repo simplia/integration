@@ -25,7 +25,7 @@ class LocalFileStorage implements FileStorage {
         return new StoredFile(
             $path,
             \DateTimeImmutable::createFromFormat('U', (string) filemtime($this->directory . DIRECTORY_SEPARATOR . $path)),
-            md5_file($path),
+            md5_file($this->getPath($path)),
             new SimpleResultStream(file_get_contents($this->getPath($path)))
         );
     }
