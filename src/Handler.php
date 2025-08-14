@@ -30,7 +30,7 @@ class Handler implements BrefHandler {
         $this->handler = $handler;
     }
 
-    private ?Trace $trace;
+    private Trace $trace;
 
     public function handle($event, BrefContext $context) {
         if (!empty($_ENV['XRAY_ENABLED'])) {

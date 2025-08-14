@@ -30,5 +30,13 @@
         "bin/run.sh",
         "bin/run-tests.sh",
         "bin/run-phpstan.sh"
-    ]
+    ],
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1"
+    }
 }

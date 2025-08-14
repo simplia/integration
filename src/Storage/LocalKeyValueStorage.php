@@ -12,10 +12,6 @@ class LocalKeyValueStorage implements KeyValueStorage {
         $this->file = $file;
     }
 
-    private function getKeyPath(string $key): string {
-        return $this->file . DIRECTORY_SEPARATOR . md5($key) . '.json';
-    }
-
     public function get(string $key) {
         return $this->load()[$key] ?? null;
     }
