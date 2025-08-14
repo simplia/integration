@@ -4,6 +4,7 @@ namespace Simplia\Integration;
 
 use Simplia\Api\Api;
 use Simplia\Integration\Event\IntegrationEvent;
+use Simplia\Integration\Storage\FileStorage;
 use Simplia\Integration\Storage\KeyValueStorage;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -11,14 +12,16 @@ class Context {
     private HttpClientInterface $client;
     private Api $api;
     private KeyValueStorage $keyValueStorage;
+    private FileStorage $fileStorage;
     private LockHandler $lockHandler;
     private array $parameters;
     private ?IntegrationEvent $event;
 
-    public function __construct(HttpClientInterface $client, Api $api, KeyValueStorage $keyValueStorage, array $parameters, ?IntegrationEvent $event) {
+    public function __construct(HttpClientInterface $client, Api $api, KeyValueStorage $keyValueStorage, FileStorage $fileStorage, array $parameters, ?IntegrationEvent $event) {
         $this->client = $client;
         $this->api = $api;
         $this->keyValueStorage = $keyValueStorage;
+        $this->fileStorage = $fileStorage;
         $this->lockHandler = new LockHandler($keyValueStorage);
         $this->parameters = $parameters;
         $this->event = $event;
@@ -34,6 +37,10 @@ class Context {
 
     public function getKeyValueStorage(): KeyValueStorage {
         return $this->keyValueStorage;
+    }
+
+    public function getFileStorage(): FileStorage {
+        return $this->fileStorage;
     }
 
     public function getParameters(): array {

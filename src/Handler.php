@@ -3,6 +3,7 @@
 namespace Simplia\Integration;
 
 use AsyncAws\DynamoDb\DynamoDbClient;
+use AsyncAws\S3\S3Client;
 use AsyncAws\Ssm\SsmClient;
 use Bref\Context\Context as BrefContext;
 use \Bref\Event\Handler as BrefHandler;
@@ -11,8 +12,11 @@ use Pkerrigan\Xray\Trace;
 use RuntimeException;
 use Simplia\Api\Api;
 use Simplia\Integration\Event\EventDecoder;
+use Simplia\Integration\Storage\FileStorage;
 use Simplia\Integration\Storage\KeyValueStorage;
+use Simplia\Integration\Storage\LocalFileStorage;
 use Simplia\Integration\Storage\LocalKeyValueStorage;
+use Simplia\Integration\Storage\RemoteFileStorage;
 use Simplia\Integration\Storage\RemoteKeyValueStorage;
 use Simplia\Integration\Trace\HttpSegment;
 use Symfony\Component\HttpClient\HttpClient;
@@ -48,6 +52,7 @@ class Handler implements BrefHandler {
                 $http,
                 $api,
                 $this->getKeyValueStorage(),
+                $this->getFileStorage(),
                 $credentials,
                 $typedInput
             ), $typedInput);
@@ -73,6 +78,18 @@ class Handler implements BrefHandler {
         }
 
         return new LocalKeyValueStorage(__DIR__ . '/../../../.storage.json');
+    }
+
+    private function getFileStorage(): FileStorage {
+        if (isset($_ENV['CREDENTIALS_PARAMETER_PATH'], $_ENV['AWS_LAMBDA_FUNCTION_NAME'])) {
+            return new RemoteFileStorage(new S3Client(['region' => $_ENV['AWS_REGION']]), 'persistent-storage', $_ENV['AWS_LAMBDA_FUNCTION_NAME']);
+        }
+
+        if (!file_exists(__DIR__ . '/../../../.storage') && !mkdir($concurrentDirectory = __DIR__ . '/../../../.storage') && !is_dir($concurrentDirectory)) {
+            throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
+        }
+
+        return new LocalFileStorage(__DIR__ . '/../../../.storage');
     }
 
     private function getCredentialsData(HttpClientInterface $httpClient): array {
