@@ -82,7 +82,7 @@ class Handler implements BrefHandler {
 
     private function getFileStorage(): FileStorage {
         if (isset($_ENV['CREDENTIALS_PARAMETER_PATH'], $_ENV['AWS_LAMBDA_FUNCTION_NAME'])) {
-            return new RemoteFileStorage(new S3Client(['region' => $_ENV['AWS_REGION']]), 'persistent-storage', $_ENV['AWS_LAMBDA_FUNCTION_NAME']);
+            return new RemoteFileStorage(new S3Client(['region' => $_ENV['AWS_REGION']]), 'persistent-storage-integration-simplia', $_ENV['AWS_LAMBDA_FUNCTION_NAME']);
         }
 
         if (!file_exists(__DIR__ . '/../../../.storage') && !mkdir($concurrentDirectory = __DIR__ . '/../../../.storage') && !is_dir($concurrentDirectory)) {
