@@ -90,6 +90,7 @@
                                         <xs:enumeration value="product:update"/>
                                         <xs:enumeration value="product:add-image"/>
                                         <xs:enumeration value="stock-items:batch-update"/>
+                                        <xs:enumeration value="stock-items:batch-update-stock-amount"/>
                                         <xs:enumeration value="stock-items:get"/>
                                         <xs:enumeration value="stock-items:list"/>
                                         <xs:enumeration value="stock-items:update-location"/>
