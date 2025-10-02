@@ -25,7 +25,7 @@ class EventDecoder {
             case 'http.request' :
                 return new HttpRequest($input['responseS3Destination']);
             case 'http.webhook' :
-                return new HttpRequest($input['data']);
+                return new Webhook($input['data']);
             case 'order.new' :
                 return new NewOrderEvent($input['id']);
             case 'admin.order.batch' :
