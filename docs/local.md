@@ -15,7 +15,7 @@ Pomocný spouštěcí skript provede vždy _docker build_ a _composer install_ s
 
 ```
 # spuštění bez vstupu
-./vendor/bin/run
+./vendor/bin/run.sh '{}'
 
 # spuštění s inline eventem
 ./vendor/bin/run '{"type": "order.new", "id": "2000212"}'
@@ -28,12 +28,12 @@ Pomocný spouštěcí skript provede vždy _docker build_ a _composer install_ s
 PHPUnit lze spouštět buď přímo v editoru (vyžaduje ruční nastavení) nebo využít pomocný skript
 
 ```
-./vendor/bin/run-tests
+./vendor/bin/run-tests.sh
 ```
 
 ## Unit testy
 Statickou analýzu kódu [PHPStan](https://phpstan.org/) lze spustit přes pomocný skript
 
 ```
-./vendor/bin/run-phpstan
+./vendor/bin/run-phpstan.sh
 ```
