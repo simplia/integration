@@ -69,6 +69,7 @@
                                         <xs:simpleType>
                                             <xs:restriction base="xs:string">
                                                 <xs:enumeration value="pohoda-invoice"/>
+                                                <xs:enumeration value="feed"/>
                                             </xs:restriction>
                                         </xs:simpleType>
                                     </xs:attribute>
