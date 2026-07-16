@@ -81,4 +81,43 @@ class ExportFileTest extends TestCase {
         $this->expectException(\RuntimeException::class);
         $this->file($client)->uploadContent('<x/>');
     }
+
+    public function testDownloadFailsOnHttpError(): void {
+        $client = new MockHttpClient(new MockResponse('<Error>AccessDenied</Error>', ['http_code' => 403]));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Source download failed: HTTP 403');
+        $this->file($client)->download();
+    }
+
+    public function testDownloadRejectsNonGzipBody(): void {
+        $client = new MockHttpClient(new MockResponse('<Error>plain, not gzip</Error>'));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('not gzip-compressed');
+        $this->file($client)->download();
+    }
+
+    public function testUploadRawSendsContentLength(): void {
+        $capturedOptions = null;
+        $client = new MockHttpClient(function (string $method, string $url, array $options) use (&$capturedOptions) {
+            $capturedOptions = $options;
+
+            return new MockResponse('');
+        });
+
+        $body = gzencode('<transformed/>');
+        $path = tempnam(sys_get_temp_dir(), 'test');
+        file_put_contents($path, $body);
+        $this->file($client)->uploadRaw($path);
+        unlink($path);
+
+        $contentLength = null;
+        foreach ($capturedOptions['headers'] as $header) {
+            if (stripos($header, 'content-length:') === 0) {
+                $contentLength = trim(substr($header, strlen('content-length:')));
+            }
+        }
+        self::assertSame((string) strlen($body), $contentLength);
+    }
 }

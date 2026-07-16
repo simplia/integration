@@ -166,12 +166,18 @@ class Handler implements BrefHandler {
 
         foreach ($httpClient->getTracedRequests() as $request) {
             $segment = new HttpSegment();
-            $name = parse_url($request['url'], PHP_URL_HOST);
+            $url = $request['url'];
+            if (str_contains($url, 'X-Amz-')) {
+                // Presigned S3 URLs carry live signatures in the query string;
+                // keep them out of X-Ray traces (rendered in shop admin pages).
+                $url = explode('?', $url, 2)[0];
+            }
+            $name = parse_url($url, PHP_URL_HOST);
             if (strpos($request['url'], $apiPrefix) === 0) {
                 $name = 'API ' . $name;
             }
             $segment
-                ->setUrl($request['url'])
+                ->setUrl($url)
                 ->setMethod($request['method'])
                 ->setName($name)
                 ->setResponseCode($request['info']['http_code'])

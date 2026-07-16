@@ -34,6 +34,10 @@ class ExportFile {
      */
     public function download(): string {
         $compressedPath = $this->downloadRaw();
+        if (file_get_contents($compressedPath, false, null, 0, 2) !== "\x1f\x8b") {
+            unlink($compressedPath);
+            throw new \RuntimeException('Downloaded export is not gzip-compressed');
+        }
         $path = $this->createTempFile('export');
         $in = gzopen($compressedPath, 'rb');
         if ($in === false) {
@@ -81,6 +85,10 @@ class ExportFile {
         }
         $client = $this->getClient();
         $response = $client->request('GET', $this->source['url']);
+        $statusCode = $response->getStatusCode();
+        if ($statusCode !== 200) {
+            throw new \RuntimeException('Source download failed: HTTP ' . $statusCode);
+        }
         $path = $this->createTempFile('export-gz');
         $out = fopen($path, 'wb');
         if ($out === false) {
@@ -128,12 +136,13 @@ class ExportFile {
      * Uploads an already-gzipped file without recompression. For very large files.
      */
     public function uploadRaw(string $compressedPath): void {
+        $size = filesize($compressedPath);
         $handle = fopen($compressedPath, 'rb');
-        if ($handle === false) {
+        if ($size === false || $handle === false) {
             throw new \RuntimeException('Cannot open compressed export for upload');
         }
         try {
-            $this->uploadBody($handle);
+            $this->uploadBody($handle, $size);
         } finally {
             fclose($handle);
         }
@@ -142,13 +151,17 @@ class ExportFile {
     /**
      * @param string|resource $body
      */
-    private function uploadBody($body): void {
+    private function uploadBody($body, ?int $contentLength = null): void {
         if (($this->destination['encoding'] ?? null) !== 'gzip') {
             throw new \RuntimeException('Unsupported destination encoding');
         }
-        $statusCode = $this->getClient()->request('PUT', $this->destination['url'], [
-            'body' => $body,
-        ])->getStatusCode();
+        $options = ['body' => $body];
+        if ($contentLength !== null) {
+            // S3 presigned PUTs reject chunked Transfer-Encoding; a resource body
+            // needs an explicit Content-Length to keep the request unchunked.
+            $options['headers'] = ['Content-Length' => (string) $contentLength];
+        }
+        $statusCode = $this->getClient()->request('PUT', $this->destination['url'], $options)->getStatusCode();
         if ($statusCode !== 200) {
             throw new \RuntimeException('Result upload failed: HTTP ' . $statusCode);
         }
