@@ -2,6 +2,7 @@
 
 namespace Simplia\Integration\Event;
 
+use Simplia\Integration\Event\Export\ExportTransformEvent;
 use Simplia\Integration\Event\Frontend\FrontendCallContext;
 use Simplia\Integration\Event\Frontend\FrontendCallEvent;
 use Simplia\Integration\Event\Order\AdminBatchOrdersEvent;
@@ -47,6 +48,13 @@ class EventDecoder {
                 return new FrontendCallEvent(
                     $input['data'] ?? [],
                     FrontendCallContext::fromArray($input['context'] ?? []),
+                );
+            case 'export.transform' :
+                return new ExportTransformEvent(
+                    $input['target'],
+                    $input['source'],
+                    $input['destination'],
+                    $input['context'] ?? [],
                 );
         }
 

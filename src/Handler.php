@@ -12,6 +12,7 @@ use Pkerrigan\Xray\Trace;
 use RuntimeException;
 use Simplia\Api\Api;
 use Simplia\Integration\Event\EventDecoder;
+use Simplia\Integration\Event\Export\ExportTransformEvent;
 use Simplia\Integration\Storage\FileStorage;
 use Simplia\Integration\Storage\KeyValueStorage;
 use Simplia\Integration\Storage\LocalFileStorage;
@@ -48,6 +49,9 @@ class Handler implements BrefHandler {
 
             $fn = $this->handler;
             $typedInput = EventDecoder::fromInput($event);
+            if ($typedInput instanceof ExportTransformEvent) {
+                $typedInput->setHttpClient($http);
+            }
             $response = $fn(new Context(
                 $http,
                 $api,
