@@ -36,13 +36,36 @@ class ExportFile {
         $compressedPath = $this->downloadRaw();
         $path = $this->createTempFile('export');
         $in = gzopen($compressedPath, 'rb');
-        $out = fopen($path, 'wb');
-        while (!gzeof($in)) {
-            fwrite($out, gzread($in, 512 * 1024));
+        if ($in === false) {
+            unlink($compressedPath);
+            unlink($path);
+            throw new \RuntimeException('Cannot open downloaded export');
         }
-        gzclose($in);
-        fclose($out);
-        unlink($compressedPath);
+        $out = fopen($path, 'wb');
+        if ($out === false) {
+            gzclose($in);
+            unlink($compressedPath);
+            unlink($path);
+            throw new \RuntimeException('Cannot open downloaded export');
+        }
+        $succeeded = false;
+        try {
+            while (!gzeof($in)) {
+                $chunk = gzread($in, 512 * 1024);
+                if ($chunk === false) {
+                    throw new \RuntimeException('Failed to decompress export');
+                }
+                fwrite($out, $chunk);
+            }
+            $succeeded = true;
+        } finally {
+            gzclose($in);
+            fclose($out);
+            unlink($compressedPath);
+            if (!$succeeded) {
+                unlink($path);
+            }
+        }
 
         return $path;
     }
@@ -89,7 +112,15 @@ class ExportFile {
      * Uploads an already-gzipped file without recompression. For very large files.
      */
     public function uploadRaw(string $compressedPath): void {
-        $this->uploadBody(fopen($compressedPath, 'rb'));
+        $handle = fopen($compressedPath, 'rb');
+        if ($handle === false) {
+            throw new \RuntimeException('Cannot open compressed export for upload');
+        }
+        try {
+            $this->uploadBody($handle);
+        } finally {
+            fclose($handle);
+        }
     }
 
     /**
