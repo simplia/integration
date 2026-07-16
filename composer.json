@@ -21,6 +21,11 @@
             "Simplia\\Integration\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Simplia\\Integration\\Tests\\": "tests/"
+        }
+    },
     "authors": [
         {
             "name": "Petr Soukup",
@@ -38,6 +43,7 @@
         }
     },
     "require-dev": {
-        "phpstan/phpstan": "^2.1"
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^9.6"
     }
 }
