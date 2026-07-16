@@ -55,7 +55,9 @@ class ExportFile {
                 if ($chunk === false) {
                     throw new \RuntimeException('Failed to decompress export');
                 }
-                fwrite($out, $chunk);
+                if (fwrite($out, $chunk) === false) {
+                    throw new \RuntimeException('Failed to write temporary file');
+                }
             }
             $succeeded = true;
         } finally {
@@ -81,10 +83,24 @@ class ExportFile {
         $response = $client->request('GET', $this->source['url']);
         $path = $this->createTempFile('export-gz');
         $out = fopen($path, 'wb');
-        foreach ($client->stream($response) as $chunk) {
-            fwrite($out, $chunk->getContent());
+        if ($out === false) {
+            unlink($path);
+            throw new \RuntimeException('Cannot create temporary file');
         }
-        fclose($out);
+        $succeeded = false;
+        try {
+            foreach ($client->stream($response) as $chunk) {
+                if (fwrite($out, $chunk->getContent()) === false) {
+                    throw new \RuntimeException('Failed to write temporary file');
+                }
+            }
+            $succeeded = true;
+        } finally {
+            fclose($out);
+            if (!$succeeded) {
+                unlink($path);
+            }
+        }
 
         return $path;
     }
