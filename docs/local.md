@@ -24,6 +24,8 @@ Pomocný spouštěcí skript provede vždy _docker build_ a _composer install_ s
 ./vendor/bin/run --file=event.json
 ```
 
+Přehled typů eventů a jejich payloadů: [events.md](events.md)
+
 ## Unit testy
 PHPUnit lze spouštět buď přímo v editoru (vyžaduje ruční nastavení) nebo využít pomocný skript
 
