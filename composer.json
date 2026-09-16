@@ -3,8 +3,8 @@
     "description": "",
     "type": "library",
     "require": {
-        "php": ">=8.1",
-        "simplia/api": "^0.1",
+        "php": ">=8.2",
+        "simplia/api": "^3.0",
         "pkerrigan/xray": "^1.2",
         "bref/bref": "^2.0",
         "async-aws/ssm": "^1.2",

@@ -62,13 +62,13 @@ class Handler implements BrefHandler {
             ), $typedInput);
 
             if (!empty($_ENV['XRAY_ENABLED'])) {
-                $this->endTracing($http, 'https://' . $host . '/api/2/');
+                $this->endTracing($http, 'https://' . $host . '/api/3/');
             }
         } catch (\Throwable $exception) {
             captureException($exception);
             if (!empty($_ENV['XRAY_ENABLED']) && isset($http, $host)) {
                 $this->trace->setError(true);
-                $this->endTracing($http, 'https://' . $host . '/api/2/');
+                $this->endTracing($http, 'https://' . $host . '/api/3/');
             }
             throw $exception;
         }
