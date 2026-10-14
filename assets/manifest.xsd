@@ -124,6 +124,8 @@
                                         <xs:enumeration value="text-pages:update"/>
                                         <xs:enumeration value="transport-method:get"/>
                                         <xs:enumeration value="transport-method:list"/>
+                                        <xs:enumeration value="user-groups:get"/>
+                                        <xs:enumeration value="user-groups:list"/>
                                         <xs:enumeration value="users:list"/>
                                         <xs:enumeration value="users:get"/>
                                         <xs:enumeration value="users:update"/>
