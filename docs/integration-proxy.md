@@ -80,7 +80,7 @@ Stav 4xx/5xx od cíle je běžná odpověď cíle, ne chyba proxy. Odmítnutý `
 
 ## Zakázané volby
 
-Klient z `getProxyClient()` odmítne s `\InvalidArgumentException` volby požadavku `proxy`, `no_proxy` a `extra`, protože by umožnily obejít tunel (např. `'proxy' => null` připojí přímo). Stejné volby odmítá i `ProxySoapClient` v parametru `$httpOptions` a navíc `body`, `json`, `headers`, `auth_basic`, `auth_bearer`, `query` a `base_uri`.
+Klient z `getProxyClient()` odmítne s `\InvalidArgumentException` volby požadavku `proxy`, `no_proxy` a `extra` (výjimka: `'extra' => ['trace_content' => false]` je povoleno, aby X-Ray tracing neukládal velká těla odpovědí; jakýkoli jiný klíč v `extra`, např. `curl`, se odmítne), protože by umožnily obejít tunel (např. `'proxy' => null` připojí přímo). Stejné volby (včetně celého `extra`) odmítá i `ProxySoapClient` v parametru `$httpOptions` a navíc `body`, `json`, `headers`, `auth_basic`, `auth_bearer`, `query` a `base_uri`.
 
 `ProxySoapClient` také odmítá SOAP volby, které by se tiše ignorovaly (`stream_context`, `proxy_host`, `connection_timeout`, `local_cert`, ...). Timeouty nastavujte v `$httpOptions` (`timeout`, `max_duration`).
 

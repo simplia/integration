@@ -30,6 +30,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * The per-request options 'proxy', 'no_proxy' and 'extra' would let a request
  * leave the tunnel (Symfony lets request options win over the defaults), so the
  * returned GuardedProxyHttpClient rejects them with \InvalidArgumentException.
+ * The one exception is 'extra' => ['trace_content' => false], which it accepts
+ * (and strips) so TraceableHttpClient does not buffer large response bodies.
  */
 final class ProxyHttpClient {
     public static function create(ProxyConfig $config): HttpClientInterface {
