@@ -8,13 +8,17 @@
         "pkerrigan/xray": "^1.2",
         "bref/bref": "^2.0",
         "async-aws/ssm": "^1.2",
-        "symfony/http-client": "^5.2",
+        "symfony/http-client": "^5.4",
         "psr/http-factory": "^1.0",
         "psr/http-client": "^1.0",
         "async-aws/dynamo-db": "^1.1",
         "ext-json": "*",
         "sentry/sdk": "^3.1",
-        "async-aws/s3": "^2.10"
+        "async-aws/s3": "^2.10",
+        "ext-curl": "*"
+    },
+    "suggest": {
+        "ext-soap": "Required for Simplia\\Integration\\Proxy\\ProxySoapClient"
     },
     "autoload": {
         "psr-4": {
