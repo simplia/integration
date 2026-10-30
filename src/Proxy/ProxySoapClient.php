@@ -45,7 +45,7 @@ class ProxySoapClient extends \SoapClient {
      * wins over the client's defaults, and 'extra' is merged shallowly, so a
      * caller's extra.curl would drop the proxy's TLS and tunnel settings.
      */
-    private const RESERVED_HTTP_OPTIONS = ['body', 'json', 'headers', 'auth_basic', 'auth_bearer', 'query', 'base_uri', 'proxy', 'no_proxy', 'extra'];
+    private const RESERVED_HTTP_OPTIONS = ['body', 'json', 'headers', 'auth_basic', 'auth_bearer', 'query', 'base_uri', ...GuardedProxyHttpClient::RESERVED_OPTIONS];
 
     private HttpClientInterface $http;
     private array $httpOptions;
