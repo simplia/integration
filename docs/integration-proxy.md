@@ -86,29 +86,31 @@ Klient z `getProxyClient()` odmítne s `\InvalidArgumentException` volby požada
 
 Nepřenášejí se cookies a přesměrování 301/302 mění POST na GET.
 
-## Jak přidat cíl
+## Jak povolit instanci a přidat cíl
 
-Cíle schvalují merge requesty do `microservice/kubernetes`, soubor `cluster/apps/integration-proxy/config/targets.yaml`. Přidejte host a port cíle (ne wildcard, ne privátní IP), znovu vygenerujte konfiguraci podle návodu v adresáři aplikace a MR nechte schválit.
+Pořadí je důležité, parametr v SSM musí existovat dřív, než se instance povolí.
 
-## Jak povolit instanci
-
-V `terraform/shop-integrations-instances` nastavte u instance:
-
-```json
-"integration_proxy": true
-```
-
-Terraform vydá klientský certifikát pro identitu `<repository>--<shop>`, uloží ho do SSM (`/integration-proxy/client/<repository>--<shop>`) a nastaví Lambdě proměnné `INTEGRATION_PROXY_URL` a `INTEGRATION_PROXY_PARAMETER_PATH`.
+1. **Identita.** Operátor v repozitáři `microservice/kubernetes` vydá klientský certifikát pro identitu `<repository>--<shop>`:
+   ```bash
+   scripts/integration-proxy/issue client-cert <repository>--<shop>
+   ```
+   Příkaz zapíše SecureString JSON `{"cert","key","ca"}` do SSM `/integration-proxy/client/<repository>--<shop>`.
+2. **Cíle.** MR do `microservice/kubernetes`, soubor `cluster/apps/integration-proxy/config/targets.yaml`: přidejte identitu `<repository>--<shop>` (s `certVersions`) a hosty a porty cílů, které smí volat (ne wildcard, ne privátní adresy). Poté spusťte `./scripts/integration-proxy/render` a výsledek commitněte, CI selže na neaktuálním renderu.
+3. **Instance.** V `terraform/shop-integrations-instances` nastavte u instance:
+   ```json
+   "integration_proxy": true
+   ```
+   Terraform certifikáty nevydává. Jen nastaví Lambdě `INTEGRATION_PROXY_URL` a `INTEGRATION_PROXY_PARAMETER_PATH` a právo číst parametr.
 
 Je-li instance povolená, ale parametr v SSM chybí nebo je poškozený, Lambda skončí chybou `ProxyConfigurationException` s cestou parametru ještě před spuštěním vašeho handleru. Nikdy nepřechází na přímé spojení.
 
 ## X-Ray
 
-Požadavky přes proxy se do X-Ray zapisují jako segmenty pojmenované podle hostu cíle. Zaznamenává se jen metoda, URL bez query řetězce, status a časy, nikdy tělo ani hlavičky.
+Požadavky přes proxy se do X-Ray zapisují jako segmenty pojmenované podle hostu cíle. Zaznamenává se jen metoda, URL bez query řetězce a přihlašovacích údajů (`user:pass@`), status a časy, nikdy tělo ani hlavičky. Požadavek odmítnutý ještě před odesláním (zakázané volby) se nezapisuje.
 
 ## Lokální vývoj
 
-Lokálně se konfigurace čte z proměnných prostředí (např. v `.env`). Všechny čtyři musí být nastavené, jinak běh skončí chybou:
+Lokálně se konfigurace čte z proměnných prostředí (`.env`, který `bin/run.sh` předává přes `docker --env-file`). Všechny čtyři musí být nastavené, jinak běh skončí chybou:
 
 | Proměnná | Obsah |
 |----------|-------|
@@ -116,5 +118,12 @@ Lokálně se konfigurace čte z proměnných prostředí (např. v `.env`). Vše
 | `INTEGRATION_PROXY_CERT` | klientský certifikát (PEM) |
 | `INTEGRATION_PROXY_KEY` | privátní klíč (PEM) |
 | `INTEGRATION_PROXY_CA` | CA, která podepsala certifikát proxy (PEM) |
+
+`--env-file` neumí víceřádkové hodnoty, proto zapište PEM na jeden řádek s doslovnými `\n` (knihovna je převede zpět na zalomení):
+
+```bash
+awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' key.pem
+# INTEGRATION_PROXY_KEY=-----BEGIN PRIVATE KEY-----\nMIGH...\n-----END PRIVATE KEY-----\n
+```
 
 Pokud `INTEGRATION_PROXY_URL` není nastavená, proxy je vypnutá a `getProxyClient()` vyhodí výjimku. Klíč nikdy neukládejte do gitu.

@@ -74,6 +74,22 @@ class ProxyConfigTest extends TestCase {
         self::assertSame(self::KEY, $config->key);
     }
 
+    public function testLocalEnvironmentAcceptsOneLinePemsWithLiteralNewlines(): void {
+        $oneLine = fn(string $pem) => str_replace("\n", '\n', $pem);
+
+        $config = ProxyConfig::fromLocalEnvironment([
+            'INTEGRATION_PROXY_URL' => self::URL,
+            'INTEGRATION_PROXY_CERT' => $oneLine(self::CERT),
+            'INTEGRATION_PROXY_KEY' => $oneLine(self::KEY),
+            'INTEGRATION_PROXY_CA' => $oneLine(self::CA),
+        ]);
+
+        self::assertNotNull($config);
+        self::assertSame(self::CERT, $config->cert);
+        self::assertSame(self::KEY, $config->key);
+        self::assertSame(self::CA, $config->ca);
+    }
+
     public function testLocalEnvironmentWithUrlButMissingKeyThrows(): void {
         $this->expectException(ProxyConfigurationException::class);
         $this->expectExceptionMessage('INTEGRATION_PROXY_KEY');

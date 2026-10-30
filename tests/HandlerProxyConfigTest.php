@@ -79,4 +79,46 @@ class HandlerProxyConfigTest extends TestCase {
 
         self::assertSame($proxy, $context->getProxyClient());
     }
+
+    public function testParameterNames(): void {
+        $env = ['CREDENTIALS_PARAMETER_PATH' => '/c', 'SHOP_CREDENTIALS_PARAMETER_PATH' => '/s'];
+        self::assertSame(['/c', '/s'], Handler::parameterNames($env));
+        self::assertSame(['/c', '/s'], Handler::parameterNames($env + ['INTEGRATION_PROXY_PARAMETER_PATH' => '']));
+        self::assertSame(['/c', '/s', self::PATH], Handler::parameterNames($env + ['INTEGRATION_PROXY_PARAMETER_PATH' => self::PATH]));
+    }
+
+    public function testSegmentDataSkipsRejectedRequests(): void {
+        $traced = [
+            ['method' => 'GET', 'url' => 'https://t.example/a', 'info' => []],
+            ['method' => 'GET', 'url' => 'https://t.example/b', 'info' => ['http_code' => 200, 'start_time' => 10.5, 'total_time' => 0.5]],
+        ];
+
+        $data = Handler::segmentData($traced, true, 'https://shop.example/api/3/');
+
+        self::assertCount(1, $data);
+        self::assertSame(['url' => 'https://t.example/b', 'method' => 'GET', 'name' => 't.example', 'code' => 200, 'start' => 10.5, 'end' => 11.0], $data[0]);
+    }
+
+    public function testSegmentDataStripsQueryAndUserinfoOfProxiedUrls(): void {
+        $traced = [['method' => 'POST', 'url' => 'https://user:pw@t.example:8443/p/q?key=SECRET#frag', 'info' => ['http_code' => 200, 'start_time' => 1.0, 'total_time' => 1.0]]];
+
+        $data = Handler::segmentData($traced, true, 'https://shop.example/api/3/');
+
+        self::assertSame('https://t.example:8443/p/q', $data[0]['url']);
+        self::assertSame('t.example', $data[0]['name']);
+    }
+
+    public function testSegmentDataKeepsPlainUrlsExceptPresigned(): void {
+        $info = ['http_code' => 200, 'start_time' => 1.0, 'total_time' => 1.0];
+        $traced = [
+            ['method' => 'GET', 'url' => 'https://shop.example/api/3/x?a=1', 'info' => $info],
+            ['method' => 'GET', 'url' => 'https://s3.example/o?X-Amz-Signature=abc', 'info' => $info],
+        ];
+
+        $data = Handler::segmentData($traced, false, 'https://shop.example/api/3/');
+
+        self::assertSame('https://shop.example/api/3/x?a=1', $data[0]['url']);
+        self::assertSame('API shop.example', $data[0]['name']);
+        self::assertSame('https://s3.example/o', $data[1]['url']);
+    }
 }
