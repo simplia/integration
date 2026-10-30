@@ -39,8 +39,13 @@ class ProxySoapClient extends \SoapClient {
         'ssl_method' => 'TLS versions are negotiated by curl',
     ];
 
-    /** HTTP client options that would replace the SOAP request itself. */
-    private const RESERVED_HTTP_OPTIONS = ['body', 'json', 'headers', 'auth_basic', 'auth_bearer', 'query', 'base_uri'];
+    /**
+     * HTTP client options that would replace the SOAP request itself, or route
+     * around the proxy: a per-request 'proxy' (null = direct) or 'no_proxy'
+     * wins over the client's defaults, and 'extra' is merged shallowly, so a
+     * caller's extra.curl would drop the proxy's TLS and tunnel settings.
+     */
+    private const RESERVED_HTTP_OPTIONS = ['body', 'json', 'headers', 'auth_basic', 'auth_bearer', 'query', 'base_uri', 'proxy', 'no_proxy', 'extra'];
 
     private HttpClientInterface $http;
     private array $httpOptions;
@@ -104,13 +109,17 @@ class ProxySoapClient extends \SoapClient {
             $this->setLastHeaders('__last_request_headers', $this->requestHeaders($location, $headers));
         }
 
-        $response = $this->http->request('POST', $location, $options);
+        $response = null;
         try {
+            $response = $this->http->request('POST', $location, $options);
             $status = $response->getStatusCode();
             $body = $response->getContent(false);
             $responseHeaders = $response->getHeaders(false);
         } catch (TransportExceptionInterface $e) {
-            throw ProxyTransportException::fromTransport($e, $response->getInfo());
+            // request() only prepares the transfer: an error there means nothing was sent.
+            throw $response === null
+                ? new ProxyTransportException($e->getMessage(), false, $e)
+                : ProxyTransportException::fromTransport($e, $response->getInfo());
         }
 
         if ($this->trace) {

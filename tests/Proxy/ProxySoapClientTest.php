@@ -5,6 +5,7 @@ namespace Simplia\Integration\Tests\Proxy;
 use PHPUnit\Framework\TestCase;
 use Simplia\Integration\Proxy\ProxySoapClient;
 use Simplia\Integration\Proxy\ProxyTransportException;
+use Symfony\Component\HttpClient\Exception\TransportException;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 
@@ -118,11 +119,43 @@ class ProxySoapClientTest extends TestCase {
         self::assertEquals(60, $options['max_duration']);
     }
 
-    public function testHttpOptionsCannotReplaceTheSoapRequest(): void {
+    /**
+     * @dataProvider reservedHttpOptionProvider
+     */
+    public function testReservedHttpOptionsAreRejected(string $name, $value): void {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('body');
+        $this->expectExceptionMessage("\"$name\"");
 
-        new ProxySoapClient($this->http([]), self::WSDL, [], ['body' => 'x']);
+        new ProxySoapClient($this->http([]), self::WSDL, [], [$name => $value]);
+    }
+
+    public static function reservedHttpOptionProvider(): array {
+        return [
+            'body replaces the envelope' => ['body', 'x'],
+            'headers replace Content-Type/SOAPAction' => ['headers', ['X-A' => 'b']],
+            // These three would bypass the proxy: null/another URL, a matching
+            // no_proxy, or an extra.curl that replaces the proxy's curl options.
+            'proxy null connects directly' => ['proxy', null],
+            'proxy elsewhere' => ['proxy', 'http://other-proxy.example:3128'],
+            'no_proxy' => ['no_proxy', '*'],
+            'extra.curl' => ['extra', ['curl' => [CURLOPT_VERBOSE => true]]],
+        ];
+    }
+
+    public function testTransportErrorAtRequestTimeIsNotSent(): void {
+        $http = new MockHttpClient(function () {
+            throw new TransportException('Cannot use an "https://" proxy');
+        });
+        $client = new ProxySoapClient($http, self::WSDL);
+
+        try {
+            $client->echo('hello');
+            self::fail('Expected ProxyTransportException');
+        } catch (ProxyTransportException $e) {
+            self::assertFalse($e->mayHaveReachedTarget());
+            self::assertStringContainsString('Cannot use an "https://" proxy', $e->getMessage());
+            self::assertInstanceOf(TransportException::class, $e->getPrevious());
+        }
     }
 
     public function testSoapFaultWith500IsParsed(): void {
