@@ -51,7 +51,8 @@ final class ProxyConfig {
         $values = [];
         foreach ($names as $field => $name) {
             if (array_key_exists($name, $env)) {
-                $values[$field] = $env[$name];
+                // docker --env-file cannot hold multi-line values, so accept one-line PEMs with literal \n.
+                $values[$field] = is_string($env[$name]) ? str_replace('\\n', "\n", $env[$name]) : $env[$name];
             }
         }
 

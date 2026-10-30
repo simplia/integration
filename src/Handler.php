@@ -122,6 +122,21 @@ class Handler implements BrefHandler {
         return ProxyConfig::fromParameterJson($env['INTEGRATION_PROXY_URL'], $parametersByName[$path], $path);
     }
 
+    /**
+     * SSM parameter names for the single getParameters call.
+     *
+     * @param array<string, mixed> $env
+     * @return list<string>
+     */
+    public static function parameterNames(array $env): array {
+        $names = [$env['CREDENTIALS_PARAMETER_PATH'], $env['SHOP_CREDENTIALS_PARAMETER_PATH']];
+        if (!empty($env['INTEGRATION_PROXY_PARAMETER_PATH'])) {
+            $names[] = $env['INTEGRATION_PROXY_PARAMETER_PATH'];
+        }
+
+        return $names;
+    }
+
     private function getCredentialsData(HttpClientInterface $httpClient): array {
         $shopCredentials = null;
         $proxyConfig = null;
@@ -130,10 +145,7 @@ class Handler implements BrefHandler {
                 'region' => $_ENV['AWS_DEFAULT_REGION'],
             ]);
             $credentialsParameter = null;
-            $names = [$_ENV['CREDENTIALS_PARAMETER_PATH'], $_ENV['SHOP_CREDENTIALS_PARAMETER_PATH']];
-            if (!empty($_ENV['INTEGRATION_PROXY_PARAMETER_PATH'])) {
-                $names[] = $_ENV['INTEGRATION_PROXY_PARAMETER_PATH'];
-            }
+            $names = self::parameterNames($_ENV);
             $proxyParameters = [];
             foreach ($ssm->getParameters([
                 'Names' => $names,
@@ -200,38 +212,65 @@ class Handler implements BrefHandler {
     }
 
     /**
+     * Turns TraceableHttpClient entries into X-Ray segment data. Only url, method and timings are
+     * kept, never bodies or headers. Entries without timing info are skipped: TraceableHttpClient
+     * records a request before the inner client runs, so one rejected by the proxy guard (or failing
+     * in request()) stays traced with an empty info.
+     *
+     * @param array<int, array{method: string, url: string, info?: array<string, mixed>}> $tracedRequests
+     * @return list<array{url: string, method: string, name: string, code: int, start: float, end: float}>
+     */
+    public static function segmentData(array $tracedRequests, bool $viaProxy, string $apiPrefix): array {
+        $result = [];
+        foreach ($tracedRequests as $request) {
+            $info = $request['info'] ?? [];
+            if (!isset($info['start_time'], $info['http_code'])) {
+                continue;
+            }
+            $url = $request['url'];
+            if ($viaProxy) {
+                // Third-party URLs often carry API keys in the query string or credentials as user:pass@.
+                $parts = parse_url($url);
+                $url = ($parts['scheme'] ?? 'https') . '://' . ($parts['host'] ?? '') . (isset($parts['port']) ? ':' . $parts['port'] : '') . ($parts['path'] ?? '');
+            } elseif (str_contains($url, 'X-Amz-')) {
+                // Presigned S3 URLs carry live signatures in the query string;
+                // keep them out of X-Ray traces (rendered in shop admin pages).
+                $url = explode('?', $url, 2)[0];
+            }
+            $name = (string)parse_url($url, PHP_URL_HOST);
+            if (strpos($request['url'], $apiPrefix) === 0) {
+                $name = 'API ' . $name;
+            }
+            $result[] = [
+                'url' => $url,
+                'method' => $request['method'],
+                'name' => $name,
+                'code' => (int)$info['http_code'],
+                'start' => (float)$info['start_time'],
+                'end' => (float)$info['start_time'] + (float)($info['total_time'] ?? 0),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
      * @param array{0: TraceableHttpClient, 1: TraceableHttpClient|null} $httpClients plain client, proxy client
      */
     private function endTracing(array $httpClients, string $apiPrefix): void {
         [$host, $port] = explode(':', $_ENV['AWS_XRAY_DAEMON_ADDRESS']);
 
-        $requests = [];
         foreach ($httpClients as $i => $httpClient) {
-            foreach ($httpClient?->getTracedRequests() ?? [] as $request) {
-                $requests[] = [$request, $i === 1];
+            foreach (self::segmentData($httpClient?->getTracedRequests() ?? [], $i === 1, $apiPrefix) as $data) {
+                $segment = new HttpSegment();
+                $segment
+                    ->setUrl($data['url'])
+                    ->setMethod($data['method'])
+                    ->setName($data['name'])
+                    ->setResponseCode($data['code'])
+                    ->setStartEnd($data['start'], $data['end']);
+                $this->trace->addSubsegment($segment);
             }
-        }
-        // Only url, method and timings are recorded, never bodies or headers.
-        foreach ($requests as [$request, $viaProxy]) {
-            $segment = new HttpSegment();
-            $url = $request['url'];
-            if ($viaProxy || str_contains($url, 'X-Amz-')) {
-                // Presigned S3 URLs carry live signatures in the query string, and third-party
-                // URLs reached through the proxy often carry API keys there;
-                // keep them out of X-Ray traces (rendered in shop admin pages).
-                $url = explode('?', $url, 2)[0];
-            }
-            $name = parse_url($url, PHP_URL_HOST);
-            if (strpos($request['url'], $apiPrefix) === 0) {
-                $name = 'API ' . $name;
-            }
-            $segment
-                ->setUrl($url)
-                ->setMethod($request['method'])
-                ->setName($name)
-                ->setResponseCode($request['info']['http_code'])
-                ->setStartEnd($request['info']['start_time'], $request['info']['start_time'] + $request['info']['total_time']);
-            $this->trace->addSubsegment($segment);
         }
 
         $this->trace
