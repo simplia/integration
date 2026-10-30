@@ -27,15 +27,13 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * Target TLS options are ordinary request options: verify_peer, verify_host,
  * cafile and peer_fingerprint (curl supports only 'pin-sha256' public key pins).
  *
- * Never pass these per request, Symfony lets them win over the defaults below:
- * - 'proxy' (null connects directly, another URL uses another proxy) and
- *   'no_proxy' (a matching host connects directly);
- * - 'extra': it is merged shallowly, so your own extra.curl replaces the
- *   proxy's client certificate, CA, tunnel and CONNECT-header settings.
+ * The per-request options 'proxy', 'no_proxy' and 'extra' would let a request
+ * leave the tunnel (Symfony lets request options win over the defaults), so the
+ * returned GuardedProxyHttpClient rejects them with \InvalidArgumentException.
  */
 final class ProxyHttpClient {
     public static function create(ProxyConfig $config): HttpClientInterface {
-        return new CurlHttpClient([
+        return new GuardedProxyHttpClient(new CurlHttpClient([
             'proxy' => $config->url,
             // An empty list instead of null, so no_proxy/NO_PROXY from the environment cannot route around the proxy.
             'no_proxy' => '',
@@ -50,6 +48,6 @@ final class ProxyHttpClient {
                     CURLOPT_SUPPRESS_CONNECT_HEADERS => true,
                 ],
             ],
-        ]);
+        ]));
     }
 }
