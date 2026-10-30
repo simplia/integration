@@ -44,7 +44,8 @@ class ProxyHttpClientTest extends TestCase {
             'proxy null' => ['proxy', null],
             'proxy elsewhere' => ['proxy', 'http://other.example:3128'],
             'no_proxy' => ['no_proxy', '*'],
-            'extra' => ['extra', ['curl' => [CURLOPT_VERBOSE => true]]],
+            'extra curl' => ['extra', ['curl' => [CURLOPT_VERBOSE => true]]],
+            'extra trace_content plus curl' => ['extra', ['trace_content' => false, 'curl' => [CURLOPT_VERBOSE => true]]],
         ];
     }
 
@@ -90,5 +91,37 @@ class ProxyHttpClientTest extends TestCase {
         self::assertInstanceOf(GuardedProxyHttpClient::class, $client);
 
         return $client;
+    }
+
+    public function testTraceContentFalsePassesThroughAndIsStripped(): void {
+        $received = [];
+        $mock = new \Symfony\Component\HttpClient\MockHttpClient(function (string $method, string $url, array $options) use (&$received) {
+            $received = $options;
+
+            return new \Symfony\Component\HttpClient\Response\MockResponse('huge body');
+        });
+        $traceable = new \Symfony\Component\HttpClient\TraceableHttpClient(new GuardedProxyHttpClient($mock));
+
+        $response = $traceable->request('GET', 'https://target.example/', ['extra' => ['trace_content' => false]]);
+
+        self::assertSame('huge body', $response->getContent());
+        self::assertArrayNotHasKey('trace_content', $received['extra'] ?? []);
+        self::assertSame([], $received['extra'] ?? [], 'the inner client must keep its own extra defaults');
+        self::assertNull($traceable->getTracedRequests()[0]['content'], 'body must not be buffered (compare testBodyIsBufferedWithoutTraceContentFalse)');
+    }
+
+    public function testBodyIsBufferedWithoutTraceContentFalse(): void {
+        $mock = new \Symfony\Component\HttpClient\MockHttpClient(new \Symfony\Component\HttpClient\Response\MockResponse('small'));
+        $traceable = new \Symfony\Component\HttpClient\TraceableHttpClient(new GuardedProxyHttpClient($mock));
+
+        $traceable->request('GET', 'https://target.example/')->getContent();
+
+        self::assertSame('small', $traceable->getTracedRequests()[0]['content']);
+    }
+
+    public function testWithOptionsAcceptsTraceContentOnly(): void {
+        $clone = $this->client()->withOptions(['extra' => ['trace_content' => false]]);
+
+        self::assertInstanceOf(GuardedProxyHttpClient::class, $clone);
     }
 }
