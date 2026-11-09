@@ -5,6 +5,7 @@ namespace Simplia\Integration\Tests;
 use PHPUnit\Framework\TestCase;
 use Simplia\Integration\Event\EventDecoder;
 use Simplia\Integration\Event\Export\ExportTransformEvent;
+use Simplia\Integration\Event\Payment\NewPaymentEvent;
 
 class EventDecoderTest extends TestCase {
     public function testDecodesExportTransform(): void {
@@ -19,6 +20,19 @@ class EventDecoderTest extends TestCase {
         self::assertInstanceOf(ExportTransformEvent::class, $event);
         self::assertSame('pohoda-invoice', $event->getTarget());
         self::assertSame(['filename' => 'pohoda.xml'], $event->getContext());
+    }
+
+    public function testDecodesNewPaymentFromSqsRecord(): void {
+        $event = EventDecoder::fromInput(['Records' => [['body' => json_encode([
+            'type' => 'payment.new',
+            'subtype' => null,
+            'shop' => 'example',
+            'id' => '12345',
+            'data' => null,
+        ])]]]);
+
+        self::assertInstanceOf(NewPaymentEvent::class, $event);
+        self::assertSame('12345', $event->getId());
     }
 
     public function testUnknownTypeReturnsNull(): void {

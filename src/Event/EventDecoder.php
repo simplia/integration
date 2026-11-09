@@ -9,6 +9,7 @@ use Simplia\Integration\Event\Order\AdminBatchOrdersEvent;
 use Simplia\Integration\Event\Order\AdminBatchProductsEvent;
 use Simplia\Integration\Event\Order\AdminBatchUsersEvent;
 use Simplia\Integration\Event\Order\NewOrderEvent;
+use Simplia\Integration\Event\Payment\NewPaymentEvent;
 use Simplia\Integration\Event\Shipment\ShipmentNormalizeEvent;
 use Simplia\Integration\Event\Stock\NewStockInputSupplierEvent;
 use Simplia\Integration\Event\Terminal\TerminalPageEvent;
@@ -38,6 +39,8 @@ class EventDecoder {
                 return new AdminBatchProductsEvent($input['ids'], $input['formData'] ?? []);
             case 'admin.user.batch' :
                 return new AdminBatchUsersEvent($input['ids'], $input['formData'] ?? []);
+            case 'payment.new' :
+                return new NewPaymentEvent((string) $input['id']);
             case 'stock-input-supplier.new' :
                 return new NewStockInputSupplierEvent($input['id']);
             case 'shipment.normalize' :
