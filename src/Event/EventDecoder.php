@@ -28,7 +28,7 @@ class EventDecoder {
 
         switch ($type) {
             case 'http.request' :
-                return new HttpRequest($input['responseS3Destination']);
+                return new HttpRequest($input['responseS3Destination'], (array) ($input['query'] ?? []));
             case 'http.webhook' :
                 return new Webhook($input['data']);
             case 'order.new' :
